@@ -6,7 +6,8 @@
 - macOS 25.3.0（darwin）
 - DOTween (免费版, Plugins/Demigiant/DOTween)
 - TextMeshPro (3.0.6 内置)
-- Cinemachine (需自行导入 Package Manager)
+- Cinemachine (2.9.7, Package Manager)
+- Input System (1.7.0, Package Manager)
 - FMOD (Plugins/FMOD)
 
 ## 项目结构
