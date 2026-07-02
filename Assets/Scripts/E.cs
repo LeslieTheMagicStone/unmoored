@@ -1,0 +1,9 @@
+namespace CGJ2026
+{
+    public static class E
+    {
+        public const string ScoreChanged  = "score_changed";
+        public const string LevelComplete = "level_complete";
+        public const string GameRestart   = "game_restart";
+    }
+}
