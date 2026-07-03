@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: PlayerConfig
   m_EditorClassIdentifier: 
   moveSpeed: 5
-  jumpForce: 10
-  maxRopeLength: 6
+  jumpForce: 20
+  maxRopeLength: 2
   groundCheckRadius: 0.1
+  gravityScale: 10

@@ -7,8 +7,19 @@ namespace CGJ2026
     [RequireComponent(typeof(Rigidbody2D))]
     public class PlayerController : MonoBehaviour
     {
+        [Header("Identity")]
         [SerializeField] int playerIndex = 0;
+
+        [Header("Config")]
         [SerializeField] PlayerConfig config;
+
+        [Header("Key Bindings")]
+        [SerializeField] KeyCode moveLeftKey = KeyCode.A;
+        [SerializeField] KeyCode moveRightKey = KeyCode.D;
+        [SerializeField] KeyCode jumpKey = KeyCode.W;
+        [SerializeField] KeyCode anchorKey = KeyCode.E;
+
+        [Header("Physics")]
         [SerializeField] Transform groundCheck;
         [SerializeField] LayerMask groundLayer;
         [SerializeField] float wallCheckDistance = 0.05f;
@@ -25,8 +36,10 @@ namespace CGJ2026
         bool jumpPressed;
         bool anchorTogglePressed;
         bool isGrounded;
+        float coyoteTimer;
 
         public CharacterForm Form => form;
+        public int PlayerIndex => playerIndex;
 
         void Awake()
         {
@@ -41,6 +54,8 @@ namespace CGJ2026
 
             if (config == null)
                 throw new System.Exception($"PlayerController [{playerIndex}]: config not assigned");
+
+            rb.gravityScale = config.GravityScale;
             if (groundCheck == null)
                 throw new System.Exception($"PlayerController [{playerIndex}]: groundCheck not assigned");
         }
@@ -59,13 +74,19 @@ namespace CGJ2026
 
             if (form == CharacterForm.Human)
             {
+                if (isGrounded)
+                    coyoteTimer = config.CoyoteTime;
+                else
+                    coyoteTimer -= Time.fixedDeltaTime;
+
                 bool wallBlocked = moveInput != 0f && IsAgainstWall(Mathf.Sign(moveInput));
                 float vx = wallBlocked ? 0f : moveInput * config.MoveSpeed;
                 rb.velocity = new Vector2(vx, rb.velocity.y);
 
-                if (jumpPressed && isGrounded)
+                if (jumpPressed && coyoteTimer > 0f)
                 {
                     jumpPressed = false;
+                    coyoteTimer = 0f;
                     rb.AddForce(Vector2.up * config.JumpForce, ForceMode2D.Impulse);
                 }
             }
@@ -73,26 +94,13 @@ namespace CGJ2026
 
         void ReadInput()
         {
-            if (playerIndex == 0)
-            {
-                float h = 0f;
-                if (Input.GetKey(KeyCode.A)) h = -1f;
-                if (Input.GetKey(KeyCode.D)) h = 1f;
-                moveInput = h;
+            float h = 0f;
+            if (Input.GetKey(moveLeftKey)) h -= 1f;
+            if (Input.GetKey(moveRightKey)) h += 1f;
+            moveInput = h;
 
-                if (Input.GetKeyDown(KeyCode.W)) jumpPressed = true;
-                if (Input.GetKeyDown(KeyCode.E)) anchorTogglePressed = true;
-            }
-            else
-            {
-                float h = 0f;
-                if (Input.GetKey(KeyCode.LeftArrow)) h = -1f;
-                if (Input.GetKey(KeyCode.RightArrow)) h = 1f;
-                moveInput = h;
-
-                if (Input.GetKeyDown(KeyCode.UpArrow)) jumpPressed = true;
-                if (Input.GetKeyDown(KeyCode.RightShift)) anchorTogglePressed = true;
-            }
+            if (Input.GetKeyDown(jumpKey)) jumpPressed = true;
+            if (Input.GetKeyDown(anchorKey)) anchorTogglePressed = true;
         }
 
         void ToggleForm()
@@ -114,6 +122,17 @@ namespace CGJ2026
                 transform.localScale = humanScale;
                 EventBus.Emit(E.PlayerReleased, this);
             }
+        }
+
+        public void ResetToHuman()
+        {
+            coyoteTimer = 0f;
+            if (form == CharacterForm.Human) return;
+            form = CharacterForm.Human;
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.velocity = Vector2.zero;
+            spriteRenderer.color = humanColor;
+            transform.localScale = humanScale;
         }
 
         bool IsAgainstWall(float direction)
