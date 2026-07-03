@@ -58,6 +58,16 @@ Each artifact is a standalone component. Drag the script onto a GameObject with 
 
 ---
 
+## WindZone
+
+**How it works:** Players inside the trigger zone are pushed continuously by `windForce`. White-blue particle cubes drift through the zone in the wind direction.
+
+**Setup:** BoxCollider2D (IsTrigger=true) + WindZone.cs. Tune `windForce` (direction + strength), `particleRate`, `particleLifetime`.
+
+**Design notes:** Use to redirect swing arcs, push players off narrow ledges, or carry them upward to unreachable platforms. Pair with SlipperySurface — wind pushes sideways while the surface drags you down.
+
+---
+
 ## Checkpoint
 
 **How it works:** Player walks through trigger → checkpoint set. Turns green. Death respawns here.
@@ -91,6 +101,7 @@ Each artifact is a standalone component. Drag the script onto a GameObject with 
 | MovingPlatform | Player in anchor zone | Patrol pauses | `moveSpeed` |
 | SlipperySurface | Anchor on side | Slides down | `slideSpeed` |
 | BounceSurface | Land on top | Launched upward | `bounceForce` |
+| WindZone | Enter trigger | Pushed + particles | `windForce` |
 | Checkpoint | Walk through | Respawn point saved | — |
 | DeathZone | Enter trigger | Death | — |
 | WinZone | Both players enter | Level complete | — |

@@ -28,6 +28,7 @@ namespace CGJ2026
             d.transform.localScale = Vector3.one * size;
             Object.Destroy(d.GetComponent<Collider>());
             var sr = d.GetComponent<MeshRenderer>();
+            sr.material = new Material(Shader.Find("Unlit/Color"));
             sr.material.color = color;
             d.transform.DOMove(d.transform.position + (Vector3)velocity, lifetime).SetEase(Ease.OutQuad);
             sr.material.DOFade(0f, lifetime).OnComplete(() => Object.Destroy(d));
