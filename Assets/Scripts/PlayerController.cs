@@ -113,6 +113,7 @@ namespace CGJ2026
             if (form == CharacterForm.Human)
             {
                 form = CharacterForm.Anchor;
+                rb.mass = config.AnchorMass;
                 rb.drag = config.AnchorDrag;
                 spriteRenderer.color = anchorColor;
                 transform.localScale = anchorScale;
@@ -121,6 +122,7 @@ namespace CGJ2026
             else
             {
                 form = CharacterForm.Human;
+                rb.mass = config.HumanMass;
                 rb.drag = config.HumanDrag;
                 spriteRenderer.color = humanColor;
                 transform.localScale = humanScale;
@@ -133,6 +135,7 @@ namespace CGJ2026
             coyoteTimer = 0f;
             if (form == CharacterForm.Human) return;
             form = CharacterForm.Human;
+            rb.mass = config.HumanMass;
             rb.drag = config.HumanDrag;
             rb.velocity = Vector2.zero;
             spriteRenderer.color = humanColor;

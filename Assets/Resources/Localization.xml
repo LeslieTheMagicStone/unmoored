@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <strings>
-  <string key="mainmenu_play">Play / 开始游戏</string>
   <string key="mainmenu_title">My Game / 我的游戏</string>
-  <string key="gameover_score">Score: {0} / 得分：{0}</string>
+  <string key="mainmenu_play">Play / 开始游戏</string>
+  <string key="mainmenu_quit">Quit / 退出</string>
+  <string key="gameover_title">Game Over / 游戏结束</string>
   <string key="gameover_retry">Retry / 重试</string>
+  <string key="gameover_menu">Main Menu / 主菜单</string>
+  <string key="hud_lives">Lives / 生命</string>
 </strings>

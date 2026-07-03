@@ -26,14 +26,15 @@ namespace CGJ2026
                 return;
             }
             Instance = this;
-        }
 
-        void Start()
-        {
             if (config == null)
                 throw new System.Exception("LevelManager: config not assigned");
 
             lives = config.MaxLives;
+        }
+
+        void Start()
+        {
             Vector3 mid = Vector3.Lerp(
                 playerA != null ? playerA.position : Vector3.zero,
                 playerB != null ? playerB.position : Vector3.zero,
