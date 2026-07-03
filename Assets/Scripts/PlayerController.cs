@@ -66,14 +66,13 @@ namespace CGJ2026
 
         void FixedUpdate()
         {
-            float halfW = 0.5f;
             float footY = col.bounds.min.y + 0.02f;
-            Vector2 center = new(transform.position.x, footY);
-            Vector2 left = center + Vector2.left * halfW;
-            Vector2 right = center + Vector2.right * halfW;
-            isGrounded = Physics2D.Raycast(center, Vector2.down, 0.08f, groundLayer)
-                      || Physics2D.Raycast(left, Vector2.down, 0.08f, groundLayer)
-                      || Physics2D.Raycast(right, Vector2.down, 0.08f, groundLayer);
+            float x = transform.position.x;
+            isGrounded = Physics2D.Raycast(new Vector2(x, footY), Vector2.down, 0.08f, groundLayer)
+                      || Physics2D.Raycast(new Vector2(x - 0.5f, footY), Vector2.down, 0.08f, groundLayer)
+                      || Physics2D.Raycast(new Vector2(x + 0.5f, footY), Vector2.down, 0.08f, groundLayer)
+                      || Physics2D.Raycast(new Vector2(x - 0.75f, footY), Vector2.down, 0.08f, groundLayer)
+                      || Physics2D.Raycast(new Vector2(x + 0.75f, footY), Vector2.down, 0.08f, groundLayer);
 
             if (anchorTogglePressed)
             {
