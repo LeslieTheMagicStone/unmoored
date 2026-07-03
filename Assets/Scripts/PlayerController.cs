@@ -20,7 +20,7 @@ namespace CGJ2026
         [SerializeField] KeyCode anchorKey = KeyCode.E;
 
         [Header("Physics")]
-        [SerializeField] Transform groundCheck;
+        [SerializeField] FootSensor footSensor;
         [SerializeField] LayerMask groundLayer;
         [SerializeField] float wallCheckDistance = 0.05f;
 
@@ -59,9 +59,10 @@ namespace CGJ2026
 
             rb.gravityScale = config.GravityScale;
             rb.drag = config.HumanDrag;
-            if (groundCheck == null)
-                throw new System.Exception($"PlayerController [{playerIndex}]: groundCheck not assigned");
+            if (footSensor == null)
+                throw new System.Exception($"PlayerController [{playerIndex}]: footSensor not assigned");
 
+            footSensor.Init(groundLayer);
             ropeSystem = FindObjectOfType<RopeSystem>();
         }
 
@@ -69,7 +70,7 @@ namespace CGJ2026
 
         void FixedUpdate()
         {
-            isGrounded = Physics2D.OverlapCircle(groundCheck.position, config.GroundCheckRadius, groundLayer);
+            isGrounded = footSensor.IsGrounded;
 
             if (anchorTogglePressed)
             {
