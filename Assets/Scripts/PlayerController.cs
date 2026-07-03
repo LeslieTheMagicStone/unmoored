@@ -22,14 +22,12 @@ namespace CGJ2026
         [Header("Physics")]
         [SerializeField] FootSensor footSensor;
         [SerializeField] LayerMask groundLayer;
-        [SerializeField] float wallCheckDistance = 0.05f;
 
         CharacterForm form = CharacterForm.Human;
         Rigidbody2D rb;
         BoxCollider2D col;
         SpriteRenderer spriteRenderer;
-        Vector3 humanScale = Vector3.one;
-        Vector3 anchorScale = new(1.3f, 0.5f, 1f);
+        Vector3 baseScale;
         float maxSwingTilt = 35f;
         float tiltSpeed = 8f;
         Color anchorColor;
@@ -47,6 +45,7 @@ namespace CGJ2026
         public int PlayerIndex => playerIndex;
         public PlayerConfig Config => config;
         public Rigidbody2D Body => rb;
+        public float MoveInput => moveInput;
 
         void Awake()
         {
@@ -58,6 +57,7 @@ namespace CGJ2026
 
             humanColor = spriteRenderer.color;
             anchorColor = Color.Lerp(humanColor, Color.black, 0.5f);
+            baseScale = transform.localScale;
 
             if (config == null)
                 throw new System.Exception($"PlayerController [{playerIndex}]: config not assigned");
@@ -105,12 +105,8 @@ namespace CGJ2026
                 if (hasGroundControl)
                 {
                     isSwinging = false;
-                    bool wallBlocked = moveInput != 0f && IsAgainstWall(Mathf.Sign(moveInput));
-                    if (moveInput != 0f || !IsBeingPulledByRope())
-                    {
-                        float vx = wallBlocked ? 0f : moveInput * config.MoveSpeed;
-                        rb.velocity = new Vector2(vx, rb.velocity.y);
-                    }
+                    float vx = moveInput * config.MoveSpeed;
+                    rb.velocity = new Vector2(vx, rb.velocity.y);
                 }
                 else if (moveInput != 0f)
                 {
@@ -162,7 +158,7 @@ namespace CGJ2026
                 rb.mass = config.AnchorMass;
                 rb.drag = config.AnchorDrag;
                 spriteRenderer.color = anchorColor;
-                transform.localScale = anchorScale;
+                transform.localScale = new Vector3(baseScale.x * 1.5f, baseScale.y * 0.3f, 1f);
                 EventBus.Emit(E.PlayerAnchored, this);
             }
             else
@@ -173,7 +169,7 @@ namespace CGJ2026
                 rb.drag = config.HumanDrag;
                 rb.gravityScale = config.GravityScale;
                 spriteRenderer.color = humanColor;
-                transform.localScale = humanScale;
+                transform.localScale = baseScale;
                 EventBus.Emit(E.PlayerReleased, this);
             }
         }
@@ -189,25 +185,12 @@ namespace CGJ2026
             rb.gravityScale = config.GravityScale;
             rb.velocity = Vector2.zero;
             spriteRenderer.color = humanColor;
-            transform.localScale = humanScale;
+            transform.localScale = baseScale;
         }
 
         void ApplyAirControl()
         {
             rb.AddForce(config.SwingForce * 0.4f * Mathf.Sign(moveInput) * Vector2.right, ForceMode2D.Force);
-        }
-
-        bool IsBeingPulledByRope()
-        {
-            return ropeSystem != null && ropeSystem.IsTaut();
-        }
-
-        bool IsAgainstWall(float direction)
-        {
-            Vector2 size = col.size * 0.9f;
-            Vector2 origin = (Vector2)transform.position + col.offset;
-            RaycastHit2D hit = Physics2D.BoxCast(origin, size, 0f, new Vector2(direction, 0), wallCheckDistance, groundLayer);
-            return hit.collider != null;
         }
     }
 }
