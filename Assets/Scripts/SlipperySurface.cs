@@ -18,8 +18,7 @@ namespace CGJ2026
             if (surfaceCollider == null) return;
 
             Bounds b = surfaceCollider.bounds;
-            b.Expand(0.2f);
-
+            b.Expand(0.1f);
             var results = Physics2D.OverlapBoxAll(b.center, b.size, 0f);
 
             foreach (var col in results)
@@ -27,9 +26,9 @@ namespace CGJ2026
                 var pc = col.GetComponent<PlayerController>();
                 if (pc == null || !pc.IsAnchored) continue;
 
-                pc.Body.position += slideSpeed * Time.fixedDeltaTime * Vector2.down;
+                if (pc.transform.position.y < surfaceCollider.bounds.max.y)
+                    pc.Body.position += slideSpeed * Time.fixedDeltaTime * Vector2.down;
             }
         }
     }
 }
-
