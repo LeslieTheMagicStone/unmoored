@@ -11,6 +11,7 @@ namespace CGJ2026
         Vector3 closedPos;
         Vector3 openPos;
         Tween moveTween;
+        bool closing;
 
         void Awake()
         {
@@ -20,19 +21,22 @@ namespace CGJ2026
 
         public void Open()
         {
+            closing = false;
             moveTween?.Kill();
             moveTween = transform.DOLocalMove(openPos, duration).SetEase(Ease.OutQuad);
         }
 
         public void Close()
         {
+            closing = true;
             moveTween?.Kill();
-            moveTween = transform.DOLocalMove(closedPos, duration).SetEase(Ease.InQuad);
+            moveTween = transform.DOLocalMove(closedPos, duration).SetEase(Ease.InQuad)
+                .OnComplete(() => closing = false);
         }
 
         void OnCollisionStay2D(Collision2D collision)
         {
-            if (moveTween != null && moveTween.IsPlaying()) return;
+            if (!closing) return;
 
             var pc = collision.gameObject.GetComponent<PlayerController>();
             if (pc != null && pc.IsGrounded)

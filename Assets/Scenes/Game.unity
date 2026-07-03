@@ -958,8 +958,8 @@ Transform:
   m_GameObject: {fileID: 569249114}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.59, y: -4.9, z: 0}
-  m_LocalScale: {x: 10.7, y: 5, z: 1}
+  m_LocalPosition: {x: -0.16, y: -4.9, z: 0}
+  m_LocalScale: {x: 7.218327, y: 5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1475,14 +1475,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8142d8a1539b4598ac2e6153c52c176, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  walkClips: []
+  walkClips:
+  - {fileID: 8300000, guid: d8a32fe4056674e0fb6334bc4e36b4bb, type: 3}
   landClips:
   - {fileID: 8300000, guid: 16333165d0d0744619d8da8d2852af54, type: 3}
   - {fileID: 8300000, guid: 2b4e71a030ec440f2b2ebf77d836630d, type: 3}
   - {fileID: 8300000, guid: cf77be6eb38664420ae93ef86c98888c, type: 3}
   - {fileID: 8300000, guid: 19415e7314d0e4335b17dc944a56874e, type: 3}
   - {fileID: 8300000, guid: f040038816f474e7ba24f0bdb7d311d0, type: 3}
-  jumpClip: {fileID: 0}
+  jumpClip: {fileID: 8300000, guid: d8a32fe4056674e0fb6334bc4e36b4bb, type: 3}
   anchorClip: {fileID: 8300000, guid: a4c8ab3a88268487eaa4b19460a5f15c, type: 3}
   anchorSnapClip: {fileID: 8300000, guid: d84f166bfc75b4c188e79d2234a3fdd4, type: 3}
   releaseClip: {fileID: 8300000, guid: 834d17caa35cf4a83bab7195c596e097, type: 3}
