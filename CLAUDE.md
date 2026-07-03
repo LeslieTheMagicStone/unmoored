@@ -47,7 +47,7 @@ Assets/
 `Scripts/E.cs`：事件 ID 常量类，所有跨系统事件名集中在这里：
 
 ```
-ScoreChanged  PlayerDied  LevelComplete  GameRestart  EnemyKilled  PickupCollected
+ScoreChanged  LevelComplete  GameRestart
 ```
 
 ### 模块化原则
@@ -95,9 +95,41 @@ MainMenu → Game → GameOver（三场景闭环）
 - 每完成一个功能 commit 一次
 - 40h 内容锁死，之后只做 polish + build
 
-## 已知坑
+## Jam 时间线
 
-- **FMOD 残留**：安装 FMOD 会把 `ProjectSettings/AudioManager.asset` 中的 `m_DisableAudio` 设为 `1`，删掉 FMOD 文件夹不会自动还原。如果 Unity 无声音，检查这里是否为 `0`。
+```
+开始: 2026-07-03 14:00 CST (+08:00)
+结束: 2026-07-05 14:00 CST (+08:00)
+```
+
+| 阶段 | 时间窗 | 目标 | 死线 |
+|------|--------|------|------|
+| 1. 审题 & 头脑风暴 | 0h–2h | 获主题，三层解读，锁定1个方向 | 2h |
+| 2. 纸上原型 & 分工 | 2h–6h | 核心循环纸上跑通，美术出风格指南，程序搭事件+骨架 | 6h |
+| 3. 垂直接片 | 6h–12h | 核心循环在引擎可玩，placeholder 完整闭环 | 12h |
+| 4. 内容铺量 | 12h–24h | 关卡/内容批量产出，手感迭代，美术批量出资产 | |
+| 5. 强制休息 | 24h–30h | 睡觉 4–6h，醒后 review polish list | 30h前起床 |
+| 6. 内容收尾 | 30h–40h | 所有内容就位，不再加新东西 | 40h 锁死 |
+| 7. Juice & Polish | 40h–47h | 粒子/震屏/音效/UI动画。出第一个 build 验证 | |
+| 8. 打包 & 提交 | 47h–48h | 录 gif，写描述，上传 | 48h |
+
+### 每条新对话开始时，请计算当前阶段并提醒我
+
+请根据上述开始时间（2026-07-03 14:00 CST）和当前对话的 system date 计算已过小时数，告诉我：
+1. 当前处于哪个阶段（1–8）
+2. 离下一个死线还有多久（如果有）
+3. 该阶段的一个关键提醒（一行）
+
+格式示例：
+> ⏰ **Jam 第 8h — 阶段 3: 垂直接片** | 离死线还有 4h
+> 核心循环必须在引擎里跑起来。用方块圆圈。不要让美术阻塞你。
+
+## 配置文件
+
+- `.editorconfig`：缩进/换行规范，IDE 自动读取
+- `.gitignore`：Unity 标准模板，Library/Temp/Builds 不入库
+- `Force Text` serialization 已开（`m_SerializationMode: 2`），`.prefab` 和 `.unity` 是 YAML，Claude Code 可直接读写
+- Input System 设为 `Both`（新旧 API 共存，`Input.GetKeyDown` 和 `InputAction` 都能用）
 
 ## AI 使用策略
 
