@@ -8,7 +8,6 @@
 - TextMeshPro (3.0.6 内置)
 - Cinemachine (2.9.7, Package Manager)
 - Input System (1.7.0, Package Manager)
-- FMOD (Plugins/FMOD)
 
 ## 项目结构
 
@@ -95,6 +94,10 @@ MainMenu → Game → GameOver（三场景闭环）
 - 策划在 12h 后只许砍不许加功能
 - 每完成一个功能 commit 一次
 - 40h 内容锁死，之后只做 polish + build
+
+## 已知坑
+
+- **FMOD 残留**：安装 FMOD 会把 `ProjectSettings/AudioManager.asset` 中的 `m_DisableAudio` 设为 `1`，删掉 FMOD 文件夹不会自动还原。如果 Unity 无声音，检查这里是否为 `0`。
 
 ## AI 使用策略
 
