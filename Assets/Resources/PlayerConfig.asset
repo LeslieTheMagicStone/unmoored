@@ -19,7 +19,7 @@ MonoBehaviour:
   gravityScale: 10
   coyoteTime: 0.08
   humanMass: 1
-  anchorMass: 1000
+  anchorMass: 200
   humanDrag: 0
   anchorDrag: 0
   anchorProbeSize: {x: 1.4, y: 1.4}
