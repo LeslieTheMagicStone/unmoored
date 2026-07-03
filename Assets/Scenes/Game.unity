@@ -824,6 +824,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerA: {fileID: 1808772690}
   playerB: {fileID: 89390092}
+  wrapLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  wrapPointOffset: 0.05
+  maxWrapPoints: 8
 --- !u!120 &1265934546
 LineRenderer:
   serializedVersion: 2
