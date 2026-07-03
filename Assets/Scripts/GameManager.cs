@@ -7,8 +7,8 @@ namespace CGJ2026
     {
         public static GameManager Instance { get; private set; }
 
-        [SerializeField] string mainMenuScene = "MainMenu";
         [SerializeField] string gameScene = "Game";
+        [SerializeField] string mainMenuScene = "MainMenu";
         [SerializeField] string gameOverScene = "GameOver";
 
         void Awake()

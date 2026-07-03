@@ -56,7 +56,7 @@ namespace CGJ2026
             var contRect = container.AddComponent<RectTransform>();
             contRect.anchorMin = new Vector2(0.5f, 0.5f);
             contRect.anchorMax = new Vector2(0.5f, 0.5f);
-            contRect.sizeDelta = new Vector2(300, 200);
+            contRect.sizeDelta = new Vector2(300, 250);
 
             // Title
             var titleGo = new GameObject("Title");
@@ -67,11 +67,12 @@ namespace CGJ2026
             title.alignment = TextAlignmentOptions.Center;
             title.color = Color.white;
             var titleRect = title.rectTransform;
-            titleRect.anchoredPosition = new Vector2(0, 60);
+            titleRect.anchoredPosition = new Vector2(0, 110);
             titleRect.sizeDelta = new Vector2(300, 60);
 
-            CreateButton(container.transform, "ResumeBtn", new Vector2(0, 10), "Resume", Resume);
-            CreateButton(container.transform, "RestartBtn", new Vector2(0, -50), "Restart", Restart);
+            CreateButton(container.transform, "ResumeBtn", new Vector2(0, 40), "Resume", Resume);
+            CreateButton(container.transform, "RestartBtn", new Vector2(0, -20), "Restart", Restart);
+            CreateButton(container.transform, "MenuBtn", new Vector2(0, -80), "Main Menu", GoToMenu);
 
             // Pause toggle button in top-right corner
             pauseBtn = new GameObject("PauseBtn");
@@ -155,6 +156,12 @@ namespace CGJ2026
             panel.SetActive(false);
             isPaused = false;
             LevelManager.Instance?.RespawnPlayers();
+        }
+
+        void GoToMenu()
+        {
+            Time.timeScale = 1f;
+            GameManager.Instance?.LoadMainMenu();
         }
 
         void OnDisable()
