@@ -38,6 +38,7 @@ namespace CGJ2026
 
         public CharacterForm Form => form;
         public bool IsAnchored => form == CharacterForm.Anchor;
+        public bool IsGrounded => isGrounded;
         public int PlayerIndex => playerIndex;
         public PlayerConfig Config => config;
         public Rigidbody2D Body => rb;
