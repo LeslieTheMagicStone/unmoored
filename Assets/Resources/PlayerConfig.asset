@@ -25,7 +25,7 @@ MonoBehaviour:
   anchorProbeSize: {x: 1.4, y: 1.4}
   anchorEdgeTolerance: 0.8
   anchorVerticalTolerance: 0.4
-  swingForce: 24
+  swingForce: 40
   swingReactiveForce: 8
   maxLives: 3
   respawnHeightOffset: 2

@@ -64,22 +64,14 @@ namespace CGJ2026
             Rigidbody2D playerBody = isPlayerA ? bodyA : bodyB;
             Rigidbody2D otherBody = isPlayerA ? bodyB : bodyA;
 
-            Vector2 ropeVector = playerBody.position - otherBody.position;
-            Vector2 tangent = new(-ropeVector.y, ropeVector.x);
-            if (tangent.sqrMagnitude <= 0.0001f) return false;
-
-            tangent.Normalize();
-            if (Vector2.Dot(tangent, Vector2.right) * horizontalInput < 0f)
-                tangent = -tangent;
-
             float inputStrength = Mathf.Abs(horizontalInput);
-            Vector2 force = player.Config.SwingForce * inputStrength * tangent;
+            Vector2 force = player.Config.SwingForce * inputStrength * Mathf.Sign(horizontalInput) * Vector2.right;
             playerBody.AddForce(force, ForceMode2D.Force);
 
             PlayerController otherPlayer = isPlayerA ? playerB : playerA;
             if (otherPlayer.Form == CharacterForm.Human && otherBody.bodyType == RigidbodyType2D.Dynamic)
             {
-                Vector2 reaction = -force.normalized * player.Config.SwingReactiveForce * inputStrength;
+                Vector2 reaction = -Mathf.Sign(horizontalInput) * player.Config.SwingReactiveForce * inputStrength * Vector2.right;
                 otherBody.AddForce(reaction, ForceMode2D.Force);
             }
 

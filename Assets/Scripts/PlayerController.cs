@@ -20,7 +20,6 @@ namespace CGJ2026
         [SerializeField] KeyCode anchorKey = KeyCode.E;
 
         [Header("Physics")]
-        [SerializeField] FootSensor footSensor;
         [SerializeField] LayerMask groundLayer;
 
         CharacterForm form = CharacterForm.Human;
@@ -28,8 +27,6 @@ namespace CGJ2026
         BoxCollider2D col;
         SpriteRenderer spriteRenderer;
         Vector3 baseScale;
-        float maxSwingTilt = 35f;
-        float tiltSpeed = 8f;
         Color anchorColor;
         Color humanColor;
         float moveInput;
@@ -37,8 +34,6 @@ namespace CGJ2026
         bool anchorTogglePressed;
         bool isGrounded;
         float coyoteTimer;
-        bool isSwinging;
-        float swingTilt;
         RopeSystem ropeSystem;
 
         public CharacterForm Form => form;
@@ -65,10 +60,6 @@ namespace CGJ2026
 
             rb.gravityScale = config.GravityScale;
             rb.drag = config.HumanDrag;
-            if (footSensor == null)
-                throw new System.Exception($"PlayerController [{playerIndex}]: footSensor not assigned");
-
-            footSensor.Init(groundLayer);
             ropeSystem = FindObjectOfType<RopeSystem>();
         }
 
@@ -77,16 +68,17 @@ namespace CGJ2026
             ReadInput();
         }
 
-        void LateUpdate()
-        {
-            float targetTilt = isSwinging ? maxSwingTilt * Mathf.Sign(-moveInput) : 0f;
-            swingTilt = Mathf.Lerp(swingTilt, targetTilt, tiltSpeed * Time.deltaTime);
-            transform.rotation = Quaternion.Euler(0f, 0f, swingTilt);
-        }
 
         void FixedUpdate()
         {
-            isGrounded = footSensor.IsGrounded;
+            float halfW = 0.35f;
+            float footY = col.bounds.min.y + 0.02f;
+            Vector2 center = new(transform.position.x, footY);
+            Vector2 left = center + Vector2.left * halfW;
+            Vector2 right = center + Vector2.right * halfW;
+            isGrounded = Physics2D.Raycast(center, Vector2.down, 0.08f, groundLayer)
+                      || Physics2D.Raycast(left, Vector2.down, 0.08f, groundLayer)
+                      || Physics2D.Raycast(right, Vector2.down, 0.08f, groundLayer);
 
             if (anchorTogglePressed)
             {
@@ -97,7 +89,6 @@ namespace CGJ2026
             if (form == CharacterForm.Anchor)
             {
                 jumpPressed = false;
-                isSwinging = false;
 
                 if (isGrounded)
                 {
@@ -124,22 +115,15 @@ namespace CGJ2026
 
             if (hasGroundControl)
             {
-                isSwinging = false;
                 float vx = moveInput * config.MoveSpeed;
                 rb.velocity = new Vector2(vx, rb.velocity.y);
             }
             else if (moveInput != 0f)
             {
                 bool canSwing = ropeSystem != null && ropeSystem.TryApplySwingInput(this, moveInput);
-                isSwinging = canSwing;
                 if (!canSwing)
                     ApplyAirControl();
             }
-            else
-            {
-                isSwinging = false;
-            }
-
             if (jumpPressed && coyoteTimer > 0f)
             {
                 jumpPressed = false;
@@ -179,14 +163,12 @@ namespace CGJ2026
             bool wasAnchored = form == CharacterForm.Anchor;
             coyoteTimer = 0f;
             jumpPressed = false;
-            isSwinging = false;
             RestoreHumanState(wasAnchored);
         }
 
         void EnterAnchorForm()
         {
             form = CharacterForm.Anchor;
-            isSwinging = false;
             jumpPressed = false;
             coyoteTimer = 0f;
             rb.angularVelocity = 0f;

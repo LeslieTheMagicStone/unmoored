@@ -2,28 +2,31 @@ using UnityEngine;
 
 namespace CGJ2026
 {
+    [RequireComponent(typeof(Collider2D))]
     public class FootSensor : MonoBehaviour
     {
-        int contactCount;
         LayerMask groundLayer;
+        Collider2D footCollider;
+        readonly Collider2D[] overlapResults = new Collider2D[8];
+        ContactFilter2D contactFilter;
 
-        public bool IsGrounded => contactCount > 0;
+        public bool IsGrounded { get; private set; }
 
         public void Init(LayerMask layer)
         {
             groundLayer = layer;
+            footCollider = GetComponent<Collider2D>();
+            contactFilter = new ContactFilter2D();
+            contactFilter.SetLayerMask(groundLayer);
+            contactFilter.useLayerMask = true;
+            contactFilter.useTriggers = false;
         }
 
-        void OnTriggerEnter2D(Collider2D other)
+        void FixedUpdate()
         {
-            if ((groundLayer.value & (1 << other.gameObject.layer)) != 0)
-                contactCount++;
-        }
-
-        void OnTriggerExit2D(Collider2D other)
-        {
-            if ((groundLayer.value & (1 << other.gameObject.layer)) != 0)
-                contactCount = Mathf.Max(0, contactCount - 1);
+            if (footCollider == null) return;
+            int count = Physics2D.OverlapCollider(footCollider, contactFilter, overlapResults);
+            IsGrounded = count > 0;
         }
     }
 }
