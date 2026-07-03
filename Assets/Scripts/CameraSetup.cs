@@ -1,4 +1,4 @@
-using Cinemachine;
+using DG.Tweening;
 using UnityEngine;
 
 namespace CGJ2026
@@ -7,34 +7,48 @@ namespace CGJ2026
     {
         [SerializeField] Transform playerA;
         [SerializeField] Transform playerB;
+        [SerializeField] float smoothTime = 0.3f;
+        [SerializeField] float orthoSize = 6f;
 
-        void Start()
+        static Camera cam;
+        static Vector3 smoothPos;
+        static Vector3 shakeOffset;
+        Vector3 velocity;
+
+        public static void Shake(float intensity, float duration)
         {
-            var tgGo = new GameObject("CM TargetGroup");
-            var tg = tgGo.AddComponent<CinemachineTargetGroup>();
-            tg.m_Targets = new[]
+            DOTween.Kill("cam_shake");
+            DOTween.To(() => intensity, v =>
             {
-                new CinemachineTargetGroup.Target { target = playerA, weight = 1f, radius = 2f },
-                new CinemachineTargetGroup.Target { target = playerB, weight = 1f, radius = 2f }
-            };
-            tg.m_PositionMode = CinemachineTargetGroup.PositionMode.GroupCenter;
+                shakeOffset = (Vector3)(Random.insideUnitCircle * v);
+            }, 0f, duration)
+                .SetId("cam_shake")
+                .SetUpdate(true)
+                .OnComplete(() => shakeOffset = Vector3.zero);
+        }
 
-            var vcamGo = new GameObject("CM Vcam");
-            var vcam = vcamGo.AddComponent<CinemachineVirtualCamera>();
-            vcam.m_Lens.OrthographicSize = 6f;
-            vcam.m_Follow = tgGo.transform;
-            vcam.m_Priority = 10;
+        void Awake()
+        {
+            cam = Camera.main;
+            if (cam != null)
+            {
+                cam.orthographicSize = orthoSize;
+                smoothPos = cam.transform.position;
+            }
+        }
 
-            var framing = vcam.AddCinemachineComponent<CinemachineFramingTransposer>();
-            framing.m_CameraDistance = 10f;
-            framing.m_DeadZoneWidth = 0.2f;
-            framing.m_DeadZoneHeight = 0.2f;
-            framing.m_SoftZoneWidth = 0.8f;
-            framing.m_SoftZoneHeight = 0.8f;
-            framing.m_MinimumOrthoSize = 5f;
-            framing.m_MaximumOrthoSize = 10f;
-            framing.m_XDamping = 0.5f;
-            framing.m_YDamping = 0.5f;
+        void LateUpdate()
+        {
+            if (playerA == null || playerB == null || cam == null) return;
+
+            Vector3 mid = Vector3.Lerp(playerA.position, playerB.position, 0.5f) + Vector3.back * 10f;
+            smoothPos = Vector3.SmoothDamp(smoothPos, mid, ref velocity, smoothTime);
+            cam.transform.position = smoothPos + shakeOffset;
+        }
+
+        void OnDestroy()
+        {
+            DOTween.Kill("cam_shake");
         }
     }
 }

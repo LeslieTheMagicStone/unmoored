@@ -220,6 +220,7 @@ namespace CGJ2026
             rb.velocity = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Kinematic;
             AudioManager.Instance?.PlayAnchorSnap();
+            Juice.ShakeLight();
         }
 
         void ExitAnchorForm(bool emitEvent)

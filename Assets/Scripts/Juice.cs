@@ -52,5 +52,9 @@ namespace CGJ2026
                 SpawnParticle(worldPos, 0.06f, new Color(0.2f, 0.9f, 0.3f), vel, 0.5f);
             }
         }
+
+        public static void ShakeLight() => CameraSetup.Shake(0.6f, 0.15f);
+        public static void ShakeMedium() => CameraSetup.Shake(1.2f, 0.25f);
+        public static void ShakeHeavy() => CameraSetup.Shake(8f, 0.7f);
     }
 }

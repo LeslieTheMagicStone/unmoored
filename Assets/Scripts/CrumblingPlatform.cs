@@ -89,6 +89,7 @@ namespace CGJ2026
             shakeTween = null;
             platformCollider.enabled = false;
             AudioManager.Instance?.PlayCrumble();
+            Juice.ShakeMedium();
 
             Transform t = visualTransform != null ? visualTransform : transform;
             t.DOShakePosition(0.2f, 0.12f, 30, 90);

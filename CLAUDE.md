@@ -6,7 +6,7 @@
 - macOS 25.3.0（darwin）
 - DOTween (免费版, Plugins/Demigiant/DOTween)
 - TextMeshPro (3.0.6 内置)
-- Cinemachine (2.9.7, Package Manager)
+- Camera: manual smooth follow + DOTween shake (no Cinemachine)
 - Input System (1.7.0, Package Manager)
 
 ## 项目结构
