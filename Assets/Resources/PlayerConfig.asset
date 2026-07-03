@@ -21,11 +21,11 @@ MonoBehaviour:
   humanMass: 1
   anchorMass: 1000
   humanDrag: 0.5
-  anchorDrag: 20
+  anchorDrag: 0.5
   anchorProbeSize: {x: 1.4, y: 1.4}
   anchorEdgeTolerance: 0.8
   anchorVerticalTolerance: 0.4
-  swingForce: 12
+  swingForce: 24
   swingReactiveForce: 8
   maxLives: 3
   respawnHeightOffset: 2

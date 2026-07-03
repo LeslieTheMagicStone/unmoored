@@ -40,7 +40,6 @@ namespace CGJ2026
         bool isSwinging;
         float swingTilt;
         RopeSystem ropeSystem;
-        readonly Collider2D[] anchorHits = new Collider2D[8];
 
         public CharacterForm Form => form;
         public bool IsAnchored => form == CharacterForm.Anchor;
@@ -99,7 +98,20 @@ namespace CGJ2026
             {
                 jumpPressed = false;
                 isSwinging = false;
-                rb.velocity = Vector2.zero;
+
+                if (isGrounded)
+                {
+                    if (rb.bodyType != RigidbodyType2D.Kinematic)
+                    {
+                        rb.bodyType = RigidbodyType2D.Kinematic;
+                        rb.velocity = Vector2.zero;
+                    }
+                }
+                else
+                {
+                    rb.bodyType = RigidbodyType2D.Dynamic;
+                    rb.gravityScale = config.GravityScale;
+                }
                 return;
             }
 
@@ -159,8 +171,7 @@ namespace CGJ2026
                 return;
             }
 
-            if (TryFindAnchorSurface(out _))
-                EnterAnchorForm();
+            EnterAnchorForm();
         }
 
         public void ResetToHuman()
@@ -169,9 +180,7 @@ namespace CGJ2026
             coyoteTimer = 0f;
             jumpPressed = false;
             isSwinging = false;
-            RestoreHumanState();
-            if (wasAnchored)
-                EventBus.Emit(E.PlayerReleased, this);
+            RestoreHumanState(wasAnchored);
         }
 
         void EnterAnchorForm()
@@ -180,9 +189,7 @@ namespace CGJ2026
             isSwinging = false;
             jumpPressed = false;
             coyoteTimer = 0f;
-            rb.velocity = Vector2.zero;
             rb.angularVelocity = 0f;
-            rb.bodyType = RigidbodyType2D.Kinematic;
             rb.mass = config.AnchorMass;
             rb.drag = config.AnchorDrag;
             spriteRenderer.color = anchorColor;
@@ -193,71 +200,26 @@ namespace CGJ2026
         void ExitAnchorForm(bool emitEvent)
         {
             if (form == CharacterForm.Human) return;
-
-            RestoreHumanState();
-            if (emitEvent)
-                EventBus.Emit(E.PlayerReleased, this);
+            RestoreHumanState(emitEvent);
         }
 
-        void RestoreHumanState()
+        void RestoreHumanState(bool wasAnchored)
         {
             form = CharacterForm.Human;
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.mass = config.HumanMass;
             rb.drag = config.HumanDrag;
             rb.gravityScale = config.GravityScale;
-            rb.velocity = Vector2.zero;
             rb.angularVelocity = 0f;
             spriteRenderer.color = humanColor;
             transform.localScale = baseScale;
+            if (wasAnchored)
+                EventBus.Emit(E.PlayerReleased, this);
         }
 
         void ApplyAirControl()
         {
             rb.AddForce(config.SwingForce * 0.4f * Mathf.Sign(moveInput) * Vector2.right, ForceMode2D.Force);
-        }
-
-        bool TryFindAnchorSurface(out Vector2 anchorSurfacePoint)
-        {
-            Bounds playerBounds = col.bounds;
-            int hitCount = Physics2D.OverlapBoxNonAlloc(
-                playerBounds.center,
-                config.AnchorProbeSize,
-                0f,
-                anchorHits,
-                groundLayer);
-
-            for (int i = 0; i < hitCount; i++)
-            {
-                Collider2D hit = anchorHits[i];
-                if (hit == null || hit == col) continue;
-                if (TryGetAnchorPointOnBounds(hit.bounds, playerBounds, out anchorSurfacePoint))
-                    return true;
-            }
-
-            anchorSurfacePoint = default;
-            return false;
-        }
-
-        bool TryGetAnchorPointOnBounds(Bounds groundBounds, Bounds playerBounds, out Vector2 anchorSurfacePoint)
-        {
-            float leftDistance = Mathf.Abs(playerBounds.center.x - groundBounds.min.x);
-            float rightDistance = Mathf.Abs(playerBounds.center.x - groundBounds.max.x);
-            float nearestEdgeDistance = Mathf.Min(leftDistance, rightDistance);
-            bool nearHorizontalEdge = nearestEdgeDistance <= config.AnchorEdgeTolerance;
-            bool overlapsVertically = playerBounds.max.y >= groundBounds.min.y &&
-                playerBounds.min.y <= groundBounds.max.y + config.AnchorVerticalTolerance;
-
-            if (!nearHorizontalEdge || !overlapsVertically)
-            {
-                anchorSurfacePoint = default;
-                return false;
-            }
-
-            float edgeX = leftDistance <= rightDistance ? groundBounds.min.x : groundBounds.max.x;
-            float surfaceY = Mathf.Clamp(playerBounds.center.y, groundBounds.min.y, groundBounds.max.y);
-            anchorSurfacePoint = new Vector2(edgeX, surfaceY);
-            return true;
         }
     }
 }
