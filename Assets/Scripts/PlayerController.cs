@@ -30,6 +30,7 @@ namespace CGJ2026
         bool jumpPressed;
         bool anchorTogglePressed;
         bool isGrounded;
+        bool wasGrounded;
         float coyoteTimer;
         bool justJumped;
         RopeSystem ropeSystem;
@@ -93,6 +94,8 @@ namespace CGJ2026
 
             if (isGrounded)
             {
+                if (!wasGrounded)
+                    Juice.DustPoof(col.bounds.min);
                 coyoteTimer = config.CoyoteTime;
                 justJumped = false;
             }
@@ -121,8 +124,10 @@ namespace CGJ2026
             }
             else if (jumpPressed)
             {
-                jumpPressed = false; // consume stale input, don't jump on land
+                jumpPressed = false;
             }
+
+            wasGrounded = isGrounded;
         }
 
         void ReadInput()

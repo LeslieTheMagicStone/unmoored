@@ -61,6 +61,8 @@ namespace CGJ2026
         {
             lives--;
             EventBus.Emit(E.LivesChanged, lives);
+            Juice.DeathFlash();
+            Juice.CameraShake(0.4f, 0.3f);
 
             if (lives <= 0)
             {

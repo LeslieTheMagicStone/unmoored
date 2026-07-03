@@ -36,6 +36,8 @@ namespace CGJ2026
                 if (spriteRenderer != null)
                     spriteRenderer.color = activatedColor;
 
+                Juice.CheckpointBurst(transform.position);
+
                 var pc = other.GetComponent<PlayerController>();
                 EventBus.Emit(E.CheckpointReached, pc.PlayerIndex);
             }
