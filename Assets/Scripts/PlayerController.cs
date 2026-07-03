@@ -172,6 +172,7 @@ namespace CGJ2026
             jumpPressed = false;
             coyoteTimer = 0f;
             rb.angularVelocity = 0f;
+            rb.velocity *= 1.15f;
             rb.mass = config.AnchorMass;
             rb.drag = config.AnchorDrag;
             spriteRenderer.color = anchorColor;
