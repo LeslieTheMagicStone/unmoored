@@ -7,10 +7,13 @@ namespace CGJ2026
     {
         [SerializeField] PlayerController playerA;
         [SerializeField] PlayerController playerB;
-        [SerializeField] float maxLength = 6f;
 
         LineRenderer lineRenderer;
         DistanceJoint2D joint;
+
+        public PlayerController PlayerA => playerA;
+        public PlayerController PlayerB => playerB;
+        public float MaxLength { get; private set; }
 
         void Awake()
         {
@@ -20,12 +23,15 @@ namespace CGJ2026
             if (playerA == null || playerB == null)
                 throw new System.Exception("RopeSystem: both players must be assigned");
 
+            var config = playerA.Config;
+            MaxLength = config.MaxRopeLength;
+
             Rigidbody2D rbA = playerA.GetComponent<Rigidbody2D>();
             Rigidbody2D rbB = playerB.GetComponent<Rigidbody2D>();
 
             joint = rbA.gameObject.AddComponent<DistanceJoint2D>();
             joint.connectedBody = rbB;
-            joint.distance = maxLength;
+            joint.distance = MaxLength;
             joint.autoConfigureDistance = false;
             joint.maxDistanceOnly = true;
             joint.enableCollision = false;

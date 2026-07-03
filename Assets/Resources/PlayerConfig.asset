@@ -13,7 +13,15 @@ MonoBehaviour:
   m_Name: PlayerConfig
   m_EditorClassIdentifier: 
   moveSpeed: 5
-  jumpForce: 20
+  jumpForce: 30
   maxRopeLength: 2
   groundCheckRadius: 0.1
   gravityScale: 10
+  coyoteTime: 0.08
+  humanMass: 1
+  anchorMass: 1000
+  humanDrag: 0.5
+  anchorDrag: 20
+  swingForce: 12
+  maxLives: 3
+  respawnHeightOffset: 2
