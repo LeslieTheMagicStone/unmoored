@@ -12,8 +12,10 @@ namespace CGJ2026
         [SerializeField] float fps = 12f;
 
         SpriteRenderer spriteRenderer;
-        float timer;
-        int frame;
+        float walkTimer;
+        float takeoffTimer;
+        int walkFrame;
+        int takeoffFrame;
         bool wasGrounded;
 
         void Awake()
@@ -26,37 +28,51 @@ namespace CGJ2026
         void LateUpdate()
         {
             bool isGrounded = controller.IsGrounded;
-            if (!isGrounded && wasGrounded)
-                frame = 0;
 
             Sprite result;
             if (controller.Form == CharacterForm.Anchor)
             {
                 result = anchorSprite;
             }
-            else if (!isGrounded && jumpSprites.Length > 0)
+            else if (!isGrounded && jumpSprites.Length >= 3)
             {
-                result = jumpSprites[Mathf.Min(frame, jumpSprites.Length - 1)];
+                if (controller.JustJumped && takeoffFrame < 2)
+                {
+                    takeoffTimer += Time.deltaTime;
+                    if (takeoffTimer >= 1f / fps)
+                    {
+                        takeoffTimer -= 1f / fps;
+                        takeoffFrame++;
+                    }
+                    result = jumpSprites[takeoffFrame];
+                }
+                else
+                {
+                    float vy = controller.VerticalVelocity;
+                    result = vy >= 0f ? jumpSprites[1] : jumpSprites[2];
+                }
             }
             else if (controller.MoveInput != 0f && walkSprites.Length > 0)
             {
-                timer += Time.deltaTime;
-                if (timer >= 1f / fps)
+                walkTimer += Time.deltaTime;
+                if (walkTimer >= 1f / fps)
                 {
-                    timer -= 1f / fps;
-                    frame = (frame + 1) % walkSprites.Length;
+                    walkTimer -= 1f / fps;
+                    walkFrame = (walkFrame + 1) % walkSprites.Length;
                 }
-                result = walkSprites[frame];
+                result = walkSprites[walkFrame];
             }
             else
             {
                 result = idleSprite;
-                timer = 0f;
-                frame = 0;
+                walkTimer = 0f;
+                walkFrame = 0;
+                takeoffFrame = 0;
+                takeoffTimer = 0f;
             }
 
             spriteRenderer.sprite = result;
-            if (controller.MoveInput != 0f)
+            if (controller.Form != CharacterForm.Anchor && controller.MoveInput != 0f)
                 spriteRenderer.flipX = controller.MoveInput < 0f;
 
             wasGrounded = isGrounded;

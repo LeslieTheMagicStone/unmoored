@@ -1806,6 +1806,11 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 50ee8b07f5eff4afe80be2031a9ba9fa, type: 3}
   - {fileID: 21300000, guid: 3885176322c8545d7b42fe267e522024, type: 3}
   - {fileID: 21300000, guid: d789ee52a5af944c6a9d9f3649759ab2, type: 3}
+  jumpSprites:
+  - {fileID: 21300000, guid: 317fc0574036d46d093cc92724ddd610, type: 3}
+  - {fileID: 21300000, guid: 33fd6eed400424f108d217e5cc410fc4, type: 3}
+  - {fileID: 21300000, guid: edcba5b116d04419d9fddafce4710c0d, type: 3}
+  anchorSprite: {fileID: 21300000, guid: 302e223f245224347926936fc3a6bcd3, type: 3}
   fps: 12
 --- !u!114 &2300000011
 MonoBehaviour:
@@ -1828,6 +1833,11 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 26444fe471c5f4097b33ccc1eca45b69, type: 3}
   - {fileID: 21300000, guid: c458882f42f214701a40a98ff8807b6c, type: 3}
   - {fileID: 21300000, guid: 8d1d8e8c33fe1466a8d61f93ccf97030, type: 3}
+  jumpSprites:
+  - {fileID: 21300000, guid: 1b535193493f7428088ce7687d257623, type: 3}
+  - {fileID: 21300000, guid: 94401b579198a4a70bc7726d544d3abd, type: 3}
+  - {fileID: 21300000, guid: 2ec770346ea904707985bed8cfc0fdc4, type: 3}
+  anchorSprite: {fileID: 21300000, guid: 2341960b99b7e4e2fb9d8e90ee90943b, type: 3}
   fps: 12
 --- !u!58 &2400000001
 CircleCollider2D:

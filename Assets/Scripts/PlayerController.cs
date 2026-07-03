@@ -25,20 +25,19 @@ namespace CGJ2026
         CharacterForm form = CharacterForm.Human;
         Rigidbody2D rb;
         BoxCollider2D col;
-        SpriteRenderer spriteRenderer;
-        Vector3 baseScale;
-        Color anchorColor;
-        Color humanColor;
         float moveInput;
         bool jumpPressed;
         bool anchorTogglePressed;
         bool isGrounded;
         float coyoteTimer;
+        bool justJumped;
         RopeSystem ropeSystem;
 
         public CharacterForm Form => form;
         public bool IsAnchored => form == CharacterForm.Anchor;
         public bool IsGrounded => isGrounded;
+        public bool JustJumped => justJumped;
+        public float VerticalVelocity => rb != null ? rb.velocity.y : 0f;
         public int PlayerIndex => playerIndex;
         public PlayerConfig Config => config;
         public Rigidbody2D Body => rb;
@@ -48,14 +47,6 @@ namespace CGJ2026
         {
             rb = GetComponent<Rigidbody2D>();
             col = GetComponent<BoxCollider2D>();
-            spriteRenderer = GetComponent<SpriteRenderer>();
-            if (spriteRenderer == null)
-                throw new System.Exception($"PlayerController [{playerIndex}]: missing SpriteRenderer");
-
-            humanColor = spriteRenderer.color;
-            anchorColor = Color.Lerp(humanColor, Color.black, 0.5f);
-            baseScale = transform.localScale;
-
             if (config == null)
                 throw new System.Exception($"PlayerController [{playerIndex}]: config not assigned");
 
@@ -108,7 +99,10 @@ namespace CGJ2026
             }
 
             if (isGrounded)
+            {
                 coyoteTimer = config.CoyoteTime;
+                justJumped = false;
+            }
             else
                 coyoteTimer -= Time.fixedDeltaTime;
 
@@ -129,6 +123,7 @@ namespace CGJ2026
             {
                 jumpPressed = false;
                 coyoteTimer = 0f;
+                justJumped = true;
                 rb.AddForce(Vector2.up * config.JumpForce, ForceMode2D.Impulse);
             }
             else if (jumpPressed)
@@ -176,8 +171,6 @@ namespace CGJ2026
             rb.velocity *= 1.15f;
             rb.mass = config.AnchorMass;
             rb.drag = config.AnchorDrag;
-            spriteRenderer.color = anchorColor;
-            transform.localScale = new Vector3(baseScale.x * 1.5f, baseScale.y * 0.3f, 1f);
             EventBus.Emit(E.PlayerAnchored, this);
         }
 
@@ -195,8 +188,6 @@ namespace CGJ2026
             rb.drag = config.HumanDrag;
             rb.gravityScale = config.GravityScale;
             rb.angularVelocity = 0f;
-            spriteRenderer.color = humanColor;
-            transform.localScale = baseScale;
             if (wasAnchored)
                 EventBus.Emit(E.PlayerReleased, this);
         }
