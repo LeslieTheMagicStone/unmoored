@@ -21,7 +21,7 @@ namespace CGJ2026
 
         [Header("Physics")]
         [SerializeField] LayerMask groundLayer;
-        [SerializeField] float anchorProbeReach = 1f;
+        [SerializeField] float anchorProbeReach = 1.15f;
 
         CharacterForm form = CharacterForm.Human;
         Rigidbody2D rb;
@@ -190,7 +190,7 @@ namespace CGJ2026
                         bestDist = d;
                         Vector2 surfacePoint = anchorSnapHits[j].point;
                         Vector2 normal = anchorSnapHits[j].normal;
-                        bestPoint = surfacePoint + normal * halfH;
+                        bestPoint = surfacePoint + normal * halfH * 1.15f;
                     }
                 }
             }
