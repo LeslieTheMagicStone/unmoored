@@ -26,6 +26,6 @@ MonoBehaviour:
   anchorEdgeTolerance: 0.8
   anchorVerticalTolerance: 0.4
   swingForce: 40
-  swingReactiveForce: 8
+  swingReactiveForce: 20
   maxLives: 100
   respawnHeightOffset: 2
