@@ -30,6 +30,8 @@ namespace CGJ2026
         SpriteRenderer spriteRenderer;
         Vector3 humanScale = Vector3.one;
         Vector3 anchorScale = new(1.3f, 0.5f, 1f);
+        float maxSwingTilt = 35f;
+        float tiltSpeed = 8f;
         Color anchorColor;
         Color humanColor;
         float moveInput;
@@ -37,11 +39,14 @@ namespace CGJ2026
         bool anchorTogglePressed;
         bool isGrounded;
         float coyoteTimer;
+        bool isSwinging;
+        float swingTilt;
         RopeSystem ropeSystem;
 
         public CharacterForm Form => form;
         public int PlayerIndex => playerIndex;
         public PlayerConfig Config => config;
+        public Rigidbody2D Body => rb;
 
         void Awake()
         {
@@ -66,7 +71,17 @@ namespace CGJ2026
             ropeSystem = FindObjectOfType<RopeSystem>();
         }
 
-        void Update() => ReadInput();
+        void Update()
+        {
+            ReadInput();
+        }
+
+        void LateUpdate()
+        {
+            float targetTilt = isSwinging ? maxSwingTilt * Mathf.Sign(-moveInput) : 0f;
+            swingTilt = Mathf.Lerp(swingTilt, targetTilt, tiltSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.Euler(0f, 0f, swingTilt);
+        }
 
         void FixedUpdate()
         {
@@ -89,16 +104,24 @@ namespace CGJ2026
 
                 if (hasGroundControl)
                 {
+                    isSwinging = false;
                     bool wallBlocked = moveInput != 0f && IsAgainstWall(Mathf.Sign(moveInput));
-                    float vx = wallBlocked ? 0f : moveInput * config.MoveSpeed;
-                    rb.velocity = new Vector2(vx, rb.velocity.y);
+                    if (moveInput != 0f || !IsBeingPulledByRope())
+                    {
+                        float vx = wallBlocked ? 0f : moveInput * config.MoveSpeed;
+                        rb.velocity = new Vector2(vx, rb.velocity.y);
+                    }
                 }
                 else if (moveInput != 0f)
                 {
-                    if (ropeSystem != null && IsRopeTaut())
-                        ApplySwingForce();
-                    else
+                    bool canSwing = ropeSystem != null && ropeSystem.TryApplySwingInput(this, moveInput);
+                    isSwinging = canSwing;
+                    if (!canSwing)
                         ApplyAirControl();
+                }
+                else
+                {
+                    isSwinging = false;
                 }
 
                 if (jumpPressed && coyoteTimer > 0f)
@@ -130,6 +153,12 @@ namespace CGJ2026
             if (form == CharacterForm.Human)
             {
                 form = CharacterForm.Anchor;
+                isSwinging = false;
+                jumpPressed = false;
+                coyoteTimer = 0f;
+                rb.velocity = Vector2.zero;
+                rb.angularVelocity = 0f;
+                rb.bodyType = RigidbodyType2D.Kinematic;
                 rb.mass = config.AnchorMass;
                 rb.drag = config.AnchorDrag;
                 spriteRenderer.color = anchorColor;
@@ -139,8 +168,10 @@ namespace CGJ2026
             else
             {
                 form = CharacterForm.Human;
+                rb.bodyType = RigidbodyType2D.Dynamic;
                 rb.mass = config.HumanMass;
                 rb.drag = config.HumanDrag;
+                rb.gravityScale = config.GravityScale;
                 spriteRenderer.color = humanColor;
                 transform.localScale = humanScale;
                 EventBus.Emit(E.PlayerReleased, this);
@@ -152,36 +183,13 @@ namespace CGJ2026
             coyoteTimer = 0f;
             if (form == CharacterForm.Human) return;
             form = CharacterForm.Human;
+            rb.bodyType = RigidbodyType2D.Dynamic;
             rb.mass = config.HumanMass;
             rb.drag = config.HumanDrag;
+            rb.gravityScale = config.GravityScale;
             rb.velocity = Vector2.zero;
             spriteRenderer.color = humanColor;
             transform.localScale = humanScale;
-        }
-
-        bool IsRopeTaut()
-        {
-            Transform other = GetOtherPlayer();
-            if (other == null) return false;
-            return Vector2.Distance(transform.position, other.position) >= ropeSystem.MaxLength - 0.3f;
-        }
-
-        void ApplySwingForce()
-        {
-            Transform other = GetOtherPlayer();
-            Vector2 ropeVec = (Vector2)transform.position - (Vector2)other.position;
-            Vector2 tangent = new(-ropeVec.y, ropeVec.x);
-            tangent.Normalize();
-
-            if (Vector2.Dot(tangent, Vector2.right) * moveInput < 0f)
-                tangent = -tangent;
-
-            Vector2 force = config.SwingForce * Mathf.Abs(moveInput) * tangent;
-            rb.AddForce(force, ForceMode2D.Force);
-
-            Rigidbody2D otherRb = other.GetComponent<Rigidbody2D>();
-            if (otherRb != null && otherRb.mass < 100f)
-                otherRb.AddForce(-force.normalized * config.SwingReactiveForce * Mathf.Abs(moveInput), ForceMode2D.Force);
         }
 
         void ApplyAirControl()
@@ -189,10 +197,9 @@ namespace CGJ2026
             rb.AddForce(config.SwingForce * 0.4f * Mathf.Sign(moveInput) * Vector2.right, ForceMode2D.Force);
         }
 
-        Transform GetOtherPlayer()
+        bool IsBeingPulledByRope()
         {
-            if (ropeSystem == null) return null;
-            return ropeSystem.PlayerA == this ? ropeSystem.PlayerB.transform : ropeSystem.PlayerA.transform;
+            return ropeSystem != null && ropeSystem.IsTaut();
         }
 
         bool IsAgainstWall(float direction)

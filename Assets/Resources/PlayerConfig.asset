@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 5
   jumpForce: 30
-  maxRopeLength: 2
+  maxRopeLength: 6
   groundCheckRadius: 0.1
   gravityScale: 10
   coyoteTime: 0.08

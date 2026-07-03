@@ -11,12 +11,15 @@ namespace CGJ2026
         [SerializeField] LayerMask wrapLayer;
         [SerializeField] float wrapPointOffset = 0.05f;
         [SerializeField] int maxWrapPoints = 8;
+        [SerializeField] float tautTolerance = 0.15f;
 
         LineRenderer lineRenderer;
         ContactFilter2D wrapFilter;
         readonly List<Vector2> wrapPoints = new();
         readonly List<Vector2> segments = new();
         readonly RaycastHit2D[] hits = new RaycastHit2D[8];
+        Rigidbody2D bodyA;
+        Rigidbody2D bodyB;
 
         public PlayerController PlayerA => playerA;
         public PlayerController PlayerB => playerB;
@@ -28,6 +31,8 @@ namespace CGJ2026
             if (playerA == null || playerB == null)
                 throw new System.Exception("RopeSystem: both players must be assigned");
 
+            bodyA = playerA.GetComponent<Rigidbody2D>();
+            bodyB = playerB.GetComponent<Rigidbody2D>();
             MaxLength = playerA.Config.MaxRopeLength;
 
             wrapFilter = new ContactFilter2D();
@@ -35,8 +40,10 @@ namespace CGJ2026
             wrapFilter.useLayerMask = true;
             wrapFilter.useTriggers = false;
 
-            Physics2D.IgnoreCollision(playerA.GetComponent<Collider2D>(),
-                playerB.GetComponent<Collider2D>(), true);
+            Physics2D.IgnoreCollision(
+                playerA.GetComponent<Collider2D>(),
+                playerB.GetComponent<Collider2D>(),
+                true);
         }
 
         void Update()
@@ -52,65 +59,88 @@ namespace CGJ2026
             EnforceConstraint();
         }
 
+        public bool IsTaut()
+        {
+            BuildSegments();
+            return RopeConstraintSolver.IsTaut(segments, MaxLength, tautTolerance);
+        }
+
+        public bool TryApplySwingInput(PlayerController player, float horizontalInput)
+        {
+            if (player == null)
+                throw new System.ArgumentNullException(nameof(player));
+            if (player != playerA && player != playerB)
+                throw new System.ArgumentException("Player is not connected to this rope.", nameof(player));
+            if (Mathf.Approximately(horizontalInput, 0f)) return false;
+
+            BuildSegments();
+            if (!RopeConstraintSolver.IsTaut(segments, MaxLength, tautTolerance)) return false;
+
+            bool isPlayerA = player == playerA;
+            Rigidbody2D playerBody = isPlayerA ? bodyA : bodyB;
+            if (!CanConstraintMove(player, playerBody)) return false;
+
+            Vector2 tangent = RopeConstraintSolver.SwingTangentForInput(
+                segments,
+                isPlayerA,
+                horizontalInput);
+            if (tangent == Vector2.zero) return false;
+
+            float inputStrength = Mathf.Abs(horizontalInput);
+            Vector2 force = player.Config.SwingForce * inputStrength * tangent;
+            playerBody.AddForce(force, ForceMode2D.Force);
+
+            PlayerController otherPlayer = isPlayerA ? playerB : playerA;
+            Rigidbody2D otherBody = isPlayerA ? bodyB : bodyA;
+            if (CanConstraintMove(otherPlayer, otherBody))
+            {
+                Vector2 reaction = -force.normalized * player.Config.SwingReactiveForce * inputStrength;
+                otherBody.AddForce(reaction, ForceMode2D.Force);
+            }
+
+            return true;
+        }
+
         void EnforceConstraint()
         {
-            float len = SegmentLength();
-            if (len <= MaxLength || len < 0.001f) return;
+            var stateA = new RopeEndpointState(
+                bodyA.position,
+                bodyA.velocity,
+                ConstraintInverseMass(playerA, bodyA));
+            var stateB = new RopeEndpointState(
+                bodyB.position,
+                bodyB.velocity,
+                ConstraintInverseMass(playerB, bodyB));
 
-            bool aAnchor = playerA.Form == CharacterForm.Anchor;
-            bool bAnchor = playerB.Form == CharacterForm.Anchor;
-            if (aAnchor && bAnchor) return;
+            RopeConstraintResult result = RopeConstraintSolver.SolveEndpoints(
+                segments,
+                MaxLength,
+                stateA,
+                stateB);
 
-            Rigidbody2D rbA = playerA.GetComponent<Rigidbody2D>();
-            Rigidbody2D rbB = playerB.GetComponent<Rigidbody2D>();
+            if (!result.AppliedCorrection) return;
 
-            if (aAnchor)
-                ConstrainToAnchor(rbB, segments.Count - 1);
-            else if (bAnchor)
-                ConstrainToAnchor(rbA, 0);
-            else
-                ConstrainMidpoint(rbA, rbB);
+            ApplyEndpointSolve(playerA, bodyA, result.Start);
+            ApplyEndpointSolve(playerB, bodyB, result.End);
         }
 
-        void ConstrainToAnchor(Rigidbody2D freeRb, int freeIndex)
+        float ConstraintInverseMass(PlayerController player, Rigidbody2D body)
         {
-            float excess = SegmentLength() - MaxLength;
-            if (excess <= 0.001f) return;
-
-            int lastIdx = segments.Count - 1;
-            Vector2 from = freeIndex == 0 ? segments[1] : segments[lastIdx - 1];
-            Vector2 dir = ((Vector2)freeRb.position - from).normalized;
-
-            freeRb.MovePosition((Vector2)freeRb.position - dir * excess);
-            float outward = Vector2.Dot(freeRb.velocity, dir);
-            if (outward > 0f) freeRb.velocity -= dir * outward;
+            if (!CanConstraintMove(player, body)) return 0f;
+            return body.mass <= 0f ? 0f : 1f / body.mass;
         }
 
-        void ConstrainMidpoint(Rigidbody2D rbA, Rigidbody2D rbB)
+        bool CanConstraintMove(PlayerController player, Rigidbody2D body)
         {
-            float excess = SegmentLength() - MaxLength;
-            if (excess <= 0.001f) return;
-
-            float half = excess * 0.5f;
-            int lastIdx = segments.Count - 1;
-
-            Vector2 dirA = ((Vector2)rbA.position - segments[1]).normalized;
-            rbA.MovePosition((Vector2)rbA.position - dirA * half);
-            float outA = Vector2.Dot(rbA.velocity, dirA);
-            if (outA > 0f) rbA.velocity -= dirA * outA;
-
-            Vector2 dirB = ((Vector2)rbB.position - segments[lastIdx - 1]).normalized;
-            rbB.MovePosition((Vector2)rbB.position - dirB * half);
-            float outB = Vector2.Dot(rbB.velocity, dirB);
-            if (outB > 0f) rbB.velocity -= dirB * outB;
+            return player.Form == CharacterForm.Human && body.bodyType == RigidbodyType2D.Dynamic;
         }
 
-        float SegmentLength()
+        void ApplyEndpointSolve(PlayerController player, Rigidbody2D body, RopeEndpointState solved)
         {
-            float total = 0f;
-            for (int i = 0; i < segments.Count - 1; i++)
-                total += Vector2.Distance(segments[i], segments[i + 1]);
-            return total;
+            if (!CanConstraintMove(player, body)) return;
+
+            body.MovePosition(solved.Position);
+            body.velocity = solved.Velocity;
         }
 
         void UpdateWrapPoints()
