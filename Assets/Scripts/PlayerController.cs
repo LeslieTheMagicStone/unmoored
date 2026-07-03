@@ -94,7 +94,10 @@ namespace CGJ2026
             if (isGrounded)
             {
                 if (!wasGrounded)
+                {
                     Juice.DustPoof(col.bounds.min);
+                    AudioManager.Instance?.PlayLand();
+                }
                 coyoteTimer = config.CoyoteTime;
                 justJumped = false;
             }
@@ -107,6 +110,8 @@ namespace CGJ2026
             {
                 float vx = moveInput * config.MoveSpeed;
                 rb.velocity = new Vector2(vx, rb.velocity.y);
+                if (Mathf.Abs(vx) > 0.1f)
+                    AudioManager.Instance?.PlayWalk();
             }
             else if (moveInput != 0f)
             {
@@ -120,6 +125,7 @@ namespace CGJ2026
                 coyoteTimer = 0f;
                 justJumped = true;
                 rb.AddForce(Vector2.up * config.JumpForce, ForceMode2D.Impulse);
+                AudioManager.Instance?.PlayJump();
             }
             else if (jumpPressed)
             {
@@ -204,6 +210,7 @@ namespace CGJ2026
             rb.position = bestPoint;
             rb.velocity = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Kinematic;
+            AudioManager.Instance?.PlayAnchorSnap();
         }
 
         void ExitAnchorForm(bool emitEvent)

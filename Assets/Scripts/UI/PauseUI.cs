@@ -141,6 +141,7 @@ namespace CGJ2026
             isPaused = true;
             panel.SetActive(true);
             Time.timeScale = 0f;
+            AudioManager.Instance?.PlayPause();
         }
 
         void Resume()

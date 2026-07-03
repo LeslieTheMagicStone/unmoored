@@ -34,8 +34,8 @@ namespace CGJ2026
 
         void OnDisable()
         {
-            EventBus.Off(E.PlayerAnchored);
-            EventBus.Off(E.PlayerReleased);
+            EventBus.Off(E.PlayerAnchored, OnPlayerAnchored);
+            EventBus.Off(E.PlayerReleased, OnPlayerReleased);
         }
 
         void MoveToNext()

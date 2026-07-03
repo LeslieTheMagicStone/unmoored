@@ -49,7 +49,7 @@ namespace CGJ2026
 
         void OnDisable()
         {
-            EventBus.Off(E.PlayerFell);
+            EventBus.Off(E.PlayerFell, OnPlayerFell);
         }
 
         public void SetCheckpoint(Vector3 position)

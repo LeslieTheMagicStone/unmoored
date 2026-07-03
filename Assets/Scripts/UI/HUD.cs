@@ -47,7 +47,7 @@ namespace CGJ2026
 
         void OnDisable()
         {
-            EventBus.Off(E.LivesChanged);
+            EventBus.Off(E.LivesChanged, OnLivesChanged);
         }
 
         void OnLivesChanged(object data)

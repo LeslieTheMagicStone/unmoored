@@ -37,7 +37,7 @@ namespace CGJ2026
 
         void OnDisable()
         {
-            EventBus.Off(E.PlayerAnchored);
+            EventBus.Off(E.PlayerAnchored, OnPlayerAnchored);
         }
 
         void OnCollisionStay2D(Collision2D collision)
@@ -88,6 +88,7 @@ namespace CGJ2026
             shakeTween?.Kill();
             shakeTween = null;
             platformCollider.enabled = false;
+            AudioManager.Instance?.PlayCrumble();
 
             Transform t = visualTransform != null ? visualTransform : transform;
             t.DOShakePosition(0.2f, 0.12f, 30, 90);

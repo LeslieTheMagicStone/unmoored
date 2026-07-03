@@ -30,8 +30,8 @@ namespace CGJ2026
 
         void OnDisable()
         {
-            EventBus.Off(E.LevelComplete);
-            EventBus.Off(E.GameOver);
+            EventBus.Off(E.LevelComplete, OnLevelComplete);
+            EventBus.Off(E.GameOver, OnGameOver);
         }
 
         void OnLevelComplete(object _) => LoadGameOver();

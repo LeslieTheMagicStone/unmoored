@@ -363,6 +363,7 @@ GameObject:
   - component: {fileID: 184203927}
   - component: {fileID: 2010000001}
   - component: {fileID: 2010000004}
+  - component: {fileID: 2010000005}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -1445,6 +1446,65 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &966190249
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 966190251}
+  - component: {fileID: 966190250}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &966190250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 966190249}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8142d8a1539b4598ac2e6153c52c176, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  walkClips: []
+  landClips:
+  - {fileID: 8300000, guid: 16333165d0d0744619d8da8d2852af54, type: 3}
+  - {fileID: 8300000, guid: 2b4e71a030ec440f2b2ebf77d836630d, type: 3}
+  - {fileID: 8300000, guid: cf77be6eb38664420ae93ef86c98888c, type: 3}
+  - {fileID: 8300000, guid: 19415e7314d0e4335b17dc944a56874e, type: 3}
+  - {fileID: 8300000, guid: f040038816f474e7ba24f0bdb7d311d0, type: 3}
+  jumpClip: {fileID: 0}
+  anchorClip: {fileID: 8300000, guid: a4c8ab3a88268487eaa4b19460a5f15c, type: 3}
+  releaseClip: {fileID: 8300000, guid: 834d17caa35cf4a83bab7195c596e097, type: 3}
+  ropeTautClip: {fileID: 8300000, guid: 035f38f353a094469bdcc5b02f2816c2, type: 3}
+  crumbleClip: {fileID: 8300000, guid: 8a6b81a7f318f4bc28c0101a2b55ea2e, type: 3}
+  deathClip: {fileID: 8300000, guid: 1d0d6ada984cf4cf8b68ba948c8fa741, type: 3}
+  checkpointClip: {fileID: 8300000, guid: 853cd472d33844b12b69ec27ffb94f8c, type: 3}
+  pauseClip: {fileID: 8300000, guid: a9857d7820d004c0abfadfaedd8221be, type: 3}
+--- !u!4 &966190251
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 966190249}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1332021975
 GameObject:
   m_ObjectHideFlags: 0
@@ -2302,6 +2362,14 @@ MonoBehaviour:
     mipBias: 0
     varianceClampScale: 0.9
     contrastAdaptiveSharpening: 0
+--- !u!81 &2010000005
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 184203926}
+  m_Enabled: 1
 --- !u!1 &2030000000
 GameObject:
   m_ObjectHideFlags: 0
@@ -3414,6 +3482,7 @@ SceneRoots:
   m_Roots:
   - {fileID: 184203928}
   - {fileID: 184106254}
+  - {fileID: 966190251}
   - {fileID: 1876729198}
   - {fileID: 7038182424158722773}
   - {fileID: 5751005651693945614}
