@@ -1,5 +1,8 @@
+using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace CGJ2026
 {
@@ -11,6 +14,8 @@ namespace CGJ2026
         [SerializeField] string mainMenuScene = "MainMenu";
         [SerializeField] string gameOverScene = "GameOver";
 
+        CanvasGroup overlay;
+
         void Awake()
         {
             if (Instance != null)
@@ -20,6 +25,42 @@ namespace CGJ2026
             }
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            CreateOverlay();
+            overlay.alpha = 1f;
+        }
+
+        void Start()
+        {
+            StartCoroutine(FadeFromBlack());
+        }
+
+        IEnumerator FadeFromBlack()
+        {
+            yield return new WaitForEndOfFrame();
+            overlay.DOFade(0f, 0.8f).SetUpdate(true);
+        }
+
+        void CreateOverlay()
+        {
+            var canvasGo = new GameObject("SceneTransitionOverlay");
+            canvasGo.transform.SetParent(transform);
+            var canvas = canvasGo.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+            canvasGo.AddComponent<CanvasScaler>();
+
+            overlay = canvasGo.AddComponent<CanvasGroup>();
+            overlay.alpha = 0f;
+            overlay.blocksRaycasts = false;
+
+            var imgGo = new GameObject("Black");
+            imgGo.transform.SetParent(canvasGo.transform, false);
+            var img = imgGo.AddComponent<Image>();
+            img.color = Color.black;
+            var rect = img.rectTransform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.sizeDelta = Vector2.zero;
         }
 
         void OnEnable()
@@ -37,8 +78,22 @@ namespace CGJ2026
         void OnLevelComplete(object _) => LoadGameOver();
         void OnGameOver(object _) => LoadGameOver();
 
-        public void LoadMainMenu() => SceneManager.LoadScene(mainMenuScene);
-        public void LoadGame() => SceneManager.LoadScene(gameScene);
-        public void LoadGameOver() => SceneManager.LoadScene(gameOverScene);
+        public void LoadMainMenu() => StartCoroutine(Transition(mainMenuScene));
+        public void LoadGame() => StartCoroutine(Transition(gameScene));
+        public void LoadGameOver() => StartCoroutine(Transition(gameOverScene));
+
+        IEnumerator Transition(string sceneName)
+        {
+            if (overlay == null) yield break;
+
+            overlay.DOKill();
+            overlay.DOFade(1f, 0.3f).SetUpdate(true);
+            yield return new WaitForSecondsRealtime(0.35f);
+
+            SceneManager.LoadScene(sceneName);
+            yield return new WaitForEndOfFrame();
+
+            overlay.DOFade(0f, 0.8f).SetUpdate(true);
+        }
     }
 }
