@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 
 namespace CGJ2026
@@ -8,11 +9,15 @@ namespace CGJ2026
         [SerializeField] PlayerController playerA;
         [SerializeField] PlayerController playerB;
         [SerializeField] float tautTolerance = 0.15f;
+        [SerializeField] float reelSpeed = 4f;
+        [SerializeField] float minReelLength = 1f;
 
         LineRenderer lineRenderer;
         DistanceJoint2D ropeJoint;
         Rigidbody2D bodyA;
         Rigidbody2D bodyB;
+        float currentLength;
+        bool reeling;
 
         public PlayerController PlayerA => playerA;
         public PlayerController PlayerB => playerB;
@@ -27,6 +32,7 @@ namespace CGJ2026
             bodyA = playerA.GetComponent<Rigidbody2D>();
             bodyB = playerB.GetComponent<Rigidbody2D>();
             MaxLength = playerA.Config.MaxRopeLength;
+            currentLength = MaxLength;
 
             ropeJoint = playerA.GetComponent<DistanceJoint2D>();
             if (ropeJoint == null)
@@ -43,12 +49,22 @@ namespace CGJ2026
         void Update()
         {
             DrawRope();
+
+            if (reeling)
+                currentLength = Mathf.MoveTowards(currentLength, minReelLength, reelSpeed * Time.deltaTime);
+            else
+                currentLength = Mathf.MoveTowards(currentLength, MaxLength, reelSpeed * Time.deltaTime);
+
+            ropeJoint.distance = currentLength;
         }
 
         public bool IsTaut()
         {
-            return Vector2.Distance(bodyA.position, bodyB.position) >= MaxLength - tautTolerance;
+            return Vector2.Distance(bodyA.position, bodyB.position) >= currentLength - tautTolerance;
         }
+
+        public void StartReel() => reeling = true;
+        public void StopReel() => reeling = false;
 
         public bool TryApplySwingInput(PlayerController player, float horizontalInput)
         {
@@ -85,7 +101,7 @@ namespace CGJ2026
             ropeJoint.anchor = Vector2.zero;
             ropeJoint.connectedAnchor = Vector2.zero;
             ropeJoint.connectedBody = bodyB;
-            ropeJoint.distance = MaxLength;
+            ropeJoint.distance = currentLength;
             ropeJoint.maxDistanceOnly = true;
             ropeJoint.enableCollision = false;
         }

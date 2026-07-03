@@ -18,6 +18,7 @@ namespace CGJ2026
         [SerializeField] KeyCode moveRightKey = KeyCode.D;
         [SerializeField] KeyCode jumpKey = KeyCode.W;
         [SerializeField] KeyCode anchorKey = KeyCode.E;
+        [SerializeField] KeyCode reelKey = KeyCode.LeftShift;
 
         [Header("Physics")]
         [SerializeField] LayerMask groundLayer;
@@ -144,6 +145,11 @@ namespace CGJ2026
 
             if (Input.GetKeyDown(jumpKey)) jumpPressed = true;
             if (Input.GetKeyDown(anchorKey)) anchorTogglePressed = true;
+
+            if (Input.GetKey(reelKey))
+                ropeSystem?.StartReel();
+            else
+                ropeSystem?.StopReel();
         }
 
         void ToggleAnchor()
