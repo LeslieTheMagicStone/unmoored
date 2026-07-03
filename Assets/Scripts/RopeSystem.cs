@@ -12,6 +12,8 @@ namespace CGJ2026
         [SerializeField] float reelSpeed = 4f;
         [SerializeField] float minReelLength = 1f;
 
+        static Material ropeMaterial;
+
         LineRenderer lineRenderer;
         DistanceJoint2D ropeJoint;
         Rigidbody2D bodyA;
@@ -26,6 +28,12 @@ namespace CGJ2026
         void Awake()
         {
             lineRenderer = GetComponent<LineRenderer>();
+            if (ropeMaterial == null)
+                ropeMaterial = new Material(Shader.Find("Sprites/Default"));
+            lineRenderer.material = ropeMaterial;
+            lineRenderer.startColor = lineRenderer.endColor = new Color(0.8f, 0.65f, 0.2f, 1f);
+            lineRenderer.startWidth = lineRenderer.endWidth = 0.06f;
+
             if (playerA == null || playerB == null)
                 throw new System.Exception("RopeSystem: both players must be assigned");
 
