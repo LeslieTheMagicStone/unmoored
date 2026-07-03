@@ -21,6 +21,7 @@ namespace CGJ2026
 
         [Header("Physics")]
         [SerializeField] LayerMask groundLayer;
+        [SerializeField] float anchorProbeReach = 1f;
 
         CharacterForm form = CharacterForm.Human;
         Rigidbody2D rb;
@@ -32,6 +33,7 @@ namespace CGJ2026
         float coyoteTimer;
         bool justJumped;
         RopeSystem ropeSystem;
+        readonly RaycastHit2D[] anchorSnapHits = new RaycastHit2D[8];
 
         public CharacterForm Form => form;
         public bool IsAnchored => form == CharacterForm.Anchor;
@@ -81,19 +83,10 @@ namespace CGJ2026
             if (form == CharacterForm.Anchor)
             {
                 jumpPressed = false;
-
-                if (isGrounded)
+                if (isGrounded && rb.bodyType != RigidbodyType2D.Kinematic)
                 {
-                    if (rb.bodyType != RigidbodyType2D.Kinematic)
-                    {
-                        rb.bodyType = RigidbodyType2D.Kinematic;
-                        rb.velocity = Vector2.zero;
-                    }
-                }
-                else
-                {
-                    rb.bodyType = RigidbodyType2D.Dynamic;
-                    rb.gravityScale = config.GravityScale;
+                    rb.bodyType = RigidbodyType2D.Kinematic;
+                    rb.velocity = Vector2.zero;
                 }
                 return;
             }
@@ -151,6 +144,7 @@ namespace CGJ2026
                 return;
             }
 
+            TrySnapToSurface();
             EnterAnchorForm();
         }
 
@@ -168,10 +162,44 @@ namespace CGJ2026
             jumpPressed = false;
             coyoteTimer = 0f;
             rb.angularVelocity = 0f;
-            rb.velocity *= 1.15f;
             rb.mass = config.AnchorMass;
             rb.drag = config.AnchorDrag;
             EventBus.Emit(E.PlayerAnchored, this);
+        }
+
+        void TrySnapToSurface()
+        {
+            Bounds b = col.bounds;
+            Vector2 center = b.center;
+            float halfH = b.extents.y;
+            float reach = (b.extents.x + halfH) * anchorProbeReach;
+
+            Vector2[] directions = { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
+            Vector2 bestPoint = Vector2.zero;
+            float bestDist = float.MaxValue;
+
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 dir = directions[i];
+                int n = Physics2D.RaycastNonAlloc(center, dir, anchorSnapHits, reach, groundLayer);
+                for (int j = 0; j < n; j++)
+                {
+                    float d = anchorSnapHits[j].distance;
+                    if (d > 0.001f && d < bestDist)
+                    {
+                        bestDist = d;
+                        Vector2 surfacePoint = anchorSnapHits[j].point;
+                        Vector2 normal = anchorSnapHits[j].normal;
+                        bestPoint = surfacePoint + normal * halfH;
+                    }
+                }
+            }
+
+            if (bestDist >= float.MaxValue) return;
+
+            rb.position = bestPoint;
+            rb.velocity = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Kinematic;
         }
 
         void ExitAnchorForm(bool emitEvent)
