@@ -9,7 +9,6 @@ namespace CGJ2026
         [SerializeField] PlayerController playerB;
 
         LineRenderer lineRenderer;
-        DistanceJoint2D joint;
 
         public PlayerController PlayerA => playerA;
         public PlayerController PlayerB => playerB;
@@ -23,24 +22,69 @@ namespace CGJ2026
             if (playerA == null || playerB == null)
                 throw new System.Exception("RopeSystem: both players must be assigned");
 
-            var config = playerA.Config;
-            MaxLength = config.MaxRopeLength;
+            MaxLength = playerA.Config.MaxRopeLength;
 
-            Rigidbody2D rbA = playerA.GetComponent<Rigidbody2D>();
-            Rigidbody2D rbB = playerB.GetComponent<Rigidbody2D>();
-
-            joint = rbA.gameObject.AddComponent<DistanceJoint2D>();
-            joint.connectedBody = rbB;
-            joint.distance = MaxLength;
-            joint.autoConfigureDistance = false;
-            joint.maxDistanceOnly = true;
-            joint.enableCollision = false;
+            Collider2D colA = playerA.GetComponent<Collider2D>();
+            Collider2D colB = playerB.GetComponent<Collider2D>();
+            Physics2D.IgnoreCollision(colA, colB, true);
         }
 
         void Update()
         {
             lineRenderer.SetPosition(0, playerA.transform.position);
             lineRenderer.SetPosition(1, playerB.transform.position);
+        }
+
+        void FixedUpdate()
+        {
+            EnforceRopeConstraint();
+        }
+
+        void EnforceRopeConstraint()
+        {
+            Rigidbody2D rbA = playerA.GetComponent<Rigidbody2D>();
+            Rigidbody2D rbB = playerB.GetComponent<Rigidbody2D>();
+
+            Vector2 posA = rbA.position;
+            Vector2 posB = rbB.position;
+            Vector2 delta = posA - posB;
+            float dist = delta.magnitude;
+
+            if (dist <= MaxLength || dist < 0.001f)
+                return;
+
+            Vector2 dir = delta / dist;
+            bool aAnchor = playerA.Form == CharacterForm.Anchor;
+            bool bAnchor = playerB.Form == CharacterForm.Anchor;
+
+            if (aAnchor && bAnchor)
+                return;
+
+            if (aAnchor)
+            {
+                rbB.position = posA - dir * MaxLength;
+                ProjectOutward(rbB, -dir);
+            }
+            else if (bAnchor)
+            {
+                rbA.position = posB + dir * MaxLength;
+                ProjectOutward(rbA, dir);
+            }
+            else
+            {
+                Vector2 mid = (posA + posB) * 0.5f;
+                rbA.position = mid + dir * MaxLength * 0.5f;
+                rbB.position = mid - dir * MaxLength * 0.5f;
+                ProjectOutward(rbA, dir);
+                ProjectOutward(rbB, -dir);
+            }
+        }
+
+        void ProjectOutward(Rigidbody2D rb, Vector2 awayFromCenter)
+        {
+            float outward = Vector2.Dot(rb.velocity, awayFromCenter);
+            if (outward > 0f)
+                rb.velocity -= awayFromCenter * outward;
         }
     }
 }

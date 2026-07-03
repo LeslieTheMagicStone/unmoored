@@ -176,7 +176,12 @@ namespace CGJ2026
             if (Vector2.Dot(tangent, Vector2.right) * moveInput < 0f)
                 tangent = -tangent;
 
-            rb.AddForce(config.SwingForce * Mathf.Abs(moveInput) * tangent, ForceMode2D.Force);
+            Vector2 force = config.SwingForce * Mathf.Abs(moveInput) * tangent;
+            rb.AddForce(force, ForceMode2D.Force);
+
+            Rigidbody2D otherRb = other.GetComponent<Rigidbody2D>();
+            if (otherRb != null && otherRb.mass < 100f)
+                otherRb.AddForce(-force.normalized * config.SwingReactiveForce * Mathf.Abs(moveInput), ForceMode2D.Force);
         }
 
         void ApplyAirControl()

@@ -23,5 +23,6 @@ MonoBehaviour:
   humanDrag: 0.5
   anchorDrag: 20
   swingForce: 12
+  swingReactiveForce: 8
   maxLives: 3
   respawnHeightOffset: 2

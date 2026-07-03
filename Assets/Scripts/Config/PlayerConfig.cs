@@ -16,6 +16,7 @@ namespace CGJ2026
         [SerializeField] float humanDrag = 0.5f;
         [SerializeField] float anchorDrag = 20f;
         [SerializeField] float swingForce = 12f;
+        [SerializeField] float swingReactiveForce = 8f;
         [SerializeField] int maxLives = 3;
         [SerializeField] float respawnHeightOffset = 2f;
 
@@ -30,6 +31,7 @@ namespace CGJ2026
         public float HumanMass => humanMass;
         public float AnchorMass => anchorMass;
         public float SwingForce => swingForce;
+        public float SwingReactiveForce => swingReactiveForce;
         public int MaxLives => maxLives;
         public float RespawnHeightOffset => respawnHeightOffset;
     }
