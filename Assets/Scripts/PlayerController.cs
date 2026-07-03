@@ -164,6 +164,8 @@ namespace CGJ2026
             coyoteTimer = 0f;
             jumpPressed = false;
             RestoreHumanState(wasAnchored);
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
         }
 
         void EnterAnchorForm()
@@ -226,7 +228,6 @@ namespace CGJ2026
             rb.mass = config.HumanMass;
             rb.drag = config.HumanDrag;
             rb.gravityScale = config.GravityScale;
-            rb.angularVelocity = 0f;
             if (wasAnchored)
                 EventBus.Emit(E.PlayerReleased, this);
         }
