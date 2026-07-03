@@ -15,6 +15,9 @@ namespace CGJ2026
         [SerializeField] float anchorMass = 1000f;
         [SerializeField] float humanDrag = 0.5f;
         [SerializeField] float anchorDrag = 20f;
+        [SerializeField] Vector2 anchorProbeSize = new(1.4f, 1.4f);
+        [SerializeField] float anchorEdgeTolerance = 0.8f;
+        [SerializeField] float anchorVerticalTolerance = 0.4f;
         [SerializeField] float swingForce = 12f;
         [SerializeField] float swingReactiveForce = 8f;
         [SerializeField] int maxLives = 3;
@@ -28,6 +31,9 @@ namespace CGJ2026
         public float CoyoteTime => coyoteTime;
         public float HumanDrag => humanDrag;
         public float AnchorDrag => anchorDrag;
+        public Vector2 AnchorProbeSize => anchorProbeSize;
+        public float AnchorEdgeTolerance => anchorEdgeTolerance;
+        public float AnchorVerticalTolerance => anchorVerticalTolerance;
         public float HumanMass => humanMass;
         public float AnchorMass => anchorMass;
         public float SwingForce => swingForce;

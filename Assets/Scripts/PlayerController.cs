@@ -4,7 +4,7 @@ namespace CGJ2026
 {
     public enum CharacterForm { Human, Anchor }
 
-    [RequireComponent(typeof(Rigidbody2D))]
+    [RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D))]
     public class PlayerController : MonoBehaviour
     {
         [Header("Identity")]
@@ -40,8 +40,10 @@ namespace CGJ2026
         bool isSwinging;
         float swingTilt;
         RopeSystem ropeSystem;
+        readonly Collider2D[] anchorHits = new Collider2D[8];
 
         public CharacterForm Form => form;
+        public bool IsAnchored => form == CharacterForm.Anchor;
         public int PlayerIndex => playerIndex;
         public PlayerConfig Config => config;
         public Rigidbody2D Body => rb;
@@ -90,46 +92,51 @@ namespace CGJ2026
             if (anchorTogglePressed)
             {
                 anchorTogglePressed = false;
-                ToggleForm();
+                ToggleAnchor();
             }
 
-            if (form == CharacterForm.Human)
+            if (form == CharacterForm.Anchor)
             {
-                if (isGrounded)
-                    coyoteTimer = config.CoyoteTime;
-                else
-                    coyoteTimer -= Time.fixedDeltaTime;
+                jumpPressed = false;
+                isSwinging = false;
+                rb.velocity = Vector2.zero;
+                return;
+            }
 
-                bool hasGroundControl = isGrounded || coyoteTimer > 0f;
+            if (isGrounded)
+                coyoteTimer = config.CoyoteTime;
+            else
+                coyoteTimer -= Time.fixedDeltaTime;
 
-                if (hasGroundControl)
-                {
-                    isSwinging = false;
-                    float vx = moveInput * config.MoveSpeed;
-                    rb.velocity = new Vector2(vx, rb.velocity.y);
-                }
-                else if (moveInput != 0f)
-                {
-                    bool canSwing = ropeSystem != null && ropeSystem.TryApplySwingInput(this, moveInput);
-                    isSwinging = canSwing;
-                    if (!canSwing)
-                        ApplyAirControl();
-                }
-                else
-                {
-                    isSwinging = false;
-                }
+            bool hasGroundControl = isGrounded || coyoteTimer > 0f;
 
-                if (jumpPressed && coyoteTimer > 0f)
-                {
-                    jumpPressed = false;
-                    coyoteTimer = 0f;
-                    rb.AddForce(Vector2.up * config.JumpForce, ForceMode2D.Impulse);
-                }
-                else if (jumpPressed)
-                {
-                    jumpPressed = false; // consume stale input, don't jump on land
-                }
+            if (hasGroundControl)
+            {
+                isSwinging = false;
+                float vx = moveInput * config.MoveSpeed;
+                rb.velocity = new Vector2(vx, rb.velocity.y);
+            }
+            else if (moveInput != 0f)
+            {
+                bool canSwing = ropeSystem != null && ropeSystem.TryApplySwingInput(this, moveInput);
+                isSwinging = canSwing;
+                if (!canSwing)
+                    ApplyAirControl();
+            }
+            else
+            {
+                isSwinging = false;
+            }
+
+            if (jumpPressed && coyoteTimer > 0f)
+            {
+                jumpPressed = false;
+                coyoteTimer = 0f;
+                rb.AddForce(Vector2.up * config.JumpForce, ForceMode2D.Impulse);
+            }
+            else if (jumpPressed)
+            {
+                jumpPressed = false; // consume stale input, don't jump on land
             }
         }
 
@@ -144,46 +151,63 @@ namespace CGJ2026
             if (Input.GetKeyDown(anchorKey)) anchorTogglePressed = true;
         }
 
-        void ToggleForm()
+        void ToggleAnchor()
         {
-            if (form == CharacterForm.Human)
+            if (form == CharacterForm.Anchor)
             {
-                form = CharacterForm.Anchor;
-                isSwinging = false;
-                jumpPressed = false;
-                coyoteTimer = 0f;
-                rb.velocity = Vector2.zero;
-                rb.angularVelocity = 0f;
-                rb.bodyType = RigidbodyType2D.Kinematic;
-                rb.mass = config.AnchorMass;
-                rb.drag = config.AnchorDrag;
-                spriteRenderer.color = anchorColor;
-                transform.localScale = new Vector3(baseScale.x * 1.5f, baseScale.y * 0.3f, 1f);
-                EventBus.Emit(E.PlayerAnchored, this);
+                ExitAnchorForm(true);
+                return;
             }
-            else
-            {
-                form = CharacterForm.Human;
-                rb.bodyType = RigidbodyType2D.Dynamic;
-                rb.mass = config.HumanMass;
-                rb.drag = config.HumanDrag;
-                rb.gravityScale = config.GravityScale;
-                spriteRenderer.color = humanColor;
-                transform.localScale = baseScale;
-                EventBus.Emit(E.PlayerReleased, this);
-            }
+
+            if (TryFindAnchorSurface(out _))
+                EnterAnchorForm();
         }
 
         public void ResetToHuman()
         {
+            bool wasAnchored = form == CharacterForm.Anchor;
             coyoteTimer = 0f;
+            jumpPressed = false;
+            isSwinging = false;
+            RestoreHumanState();
+            if (wasAnchored)
+                EventBus.Emit(E.PlayerReleased, this);
+        }
+
+        void EnterAnchorForm()
+        {
+            form = CharacterForm.Anchor;
+            isSwinging = false;
+            jumpPressed = false;
+            coyoteTimer = 0f;
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.mass = config.AnchorMass;
+            rb.drag = config.AnchorDrag;
+            spriteRenderer.color = anchorColor;
+            transform.localScale = new Vector3(baseScale.x * 1.5f, baseScale.y * 0.3f, 1f);
+            EventBus.Emit(E.PlayerAnchored, this);
+        }
+
+        void ExitAnchorForm(bool emitEvent)
+        {
             if (form == CharacterForm.Human) return;
+
+            RestoreHumanState();
+            if (emitEvent)
+                EventBus.Emit(E.PlayerReleased, this);
+        }
+
+        void RestoreHumanState()
+        {
             form = CharacterForm.Human;
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.mass = config.HumanMass;
             rb.drag = config.HumanDrag;
             rb.gravityScale = config.GravityScale;
             rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
             spriteRenderer.color = humanColor;
             transform.localScale = baseScale;
         }
@@ -191,6 +215,49 @@ namespace CGJ2026
         void ApplyAirControl()
         {
             rb.AddForce(config.SwingForce * 0.4f * Mathf.Sign(moveInput) * Vector2.right, ForceMode2D.Force);
+        }
+
+        bool TryFindAnchorSurface(out Vector2 anchorSurfacePoint)
+        {
+            Bounds playerBounds = col.bounds;
+            int hitCount = Physics2D.OverlapBoxNonAlloc(
+                playerBounds.center,
+                config.AnchorProbeSize,
+                0f,
+                anchorHits,
+                groundLayer);
+
+            for (int i = 0; i < hitCount; i++)
+            {
+                Collider2D hit = anchorHits[i];
+                if (hit == null || hit == col) continue;
+                if (TryGetAnchorPointOnBounds(hit.bounds, playerBounds, out anchorSurfacePoint))
+                    return true;
+            }
+
+            anchorSurfacePoint = default;
+            return false;
+        }
+
+        bool TryGetAnchorPointOnBounds(Bounds groundBounds, Bounds playerBounds, out Vector2 anchorSurfacePoint)
+        {
+            float leftDistance = Mathf.Abs(playerBounds.center.x - groundBounds.min.x);
+            float rightDistance = Mathf.Abs(playerBounds.center.x - groundBounds.max.x);
+            float nearestEdgeDistance = Mathf.Min(leftDistance, rightDistance);
+            bool nearHorizontalEdge = nearestEdgeDistance <= config.AnchorEdgeTolerance;
+            bool overlapsVertically = playerBounds.max.y >= groundBounds.min.y &&
+                playerBounds.min.y <= groundBounds.max.y + config.AnchorVerticalTolerance;
+
+            if (!nearHorizontalEdge || !overlapsVertically)
+            {
+                anchorSurfacePoint = default;
+                return false;
+            }
+
+            float edgeX = leftDistance <= rightDistance ? groundBounds.min.x : groundBounds.max.x;
+            float surfaceY = Mathf.Clamp(playerBounds.center.y, groundBounds.min.y, groundBounds.max.y);
+            anchorSurfacePoint = new Vector2(edgeX, surfaceY);
+            return true;
         }
     }
 }
