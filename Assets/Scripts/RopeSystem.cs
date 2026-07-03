@@ -90,8 +90,30 @@ namespace CGJ2026
                 Vector2 reaction = -Mathf.Sign(horizontalInput) * player.Config.SwingReactiveForce * inputStrength * Vector2.right;
                 otherBody.AddForce(reaction, ForceMode2D.Force);
             }
+            else if (otherPlayer.Form == CharacterForm.Human && otherPlayer.IsGrounded)
+            {
+                PullGroundedPlayerTowardEdge(otherPlayer);
+            }
 
             return true;
+        }
+
+        void PullGroundedPlayerTowardEdge(PlayerController grounded)
+        {
+            Rigidbody2D groundedRb = grounded.Body;
+            PlayerController swinger = grounded == playerA ? playerB : playerA;
+            Vector2 dirToSwinger = ((Vector2)swinger.Body.position - groundedRb.position).normalized;
+
+            RaycastHit2D edgeHit = Physics2D.Raycast(groundedRb.position, dirToSwinger, MaxLength + 1f, grounded.GroundLayer);
+            if (!edgeHit)
+                return;
+
+            Vector2 edgePoint = edgeHit.point;
+            Vector2 outFromWall = (edgePoint - (Vector2)groundedRb.position).normalized;
+
+            float horizontal = Mathf.Sign(outFromWall.x);
+            Vector2 force = new Vector2(horizontal, 0f) * grounded.Config.SwingReactiveForce * 0.8f;
+            groundedRb.AddForce(force, ForceMode2D.Force);
         }
 
         void ConfigureRopeJoint()

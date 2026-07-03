@@ -39,6 +39,7 @@ namespace CGJ2026
 
         public CharacterForm Form => form;
         public bool IsAnchored => form == CharacterForm.Anchor;
+        public LayerMask GroundLayer => groundLayer;
         public bool IsGrounded => isGrounded;
         public bool JustJumped => justJumped;
         public float VerticalVelocity => rb != null ? rb.velocity.y : 0f;
