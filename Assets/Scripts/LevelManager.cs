@@ -9,11 +9,14 @@ namespace CGJ2026
         [SerializeField] Transform playerA;
         [SerializeField] Transform playerB;
         [SerializeField] Transform winZone;
+        [SerializeField] PlayerConfig config;
 
-        Vector3 spawnA;
-        Vector3 spawnB;
+        Vector3 checkpoint;
+        int lives;
         bool aReachedWin;
         bool bReachedWin;
+
+        public int Lives => lives;
 
         void Awake()
         {
@@ -27,8 +30,15 @@ namespace CGJ2026
 
         void Start()
         {
-            spawnA = playerA != null ? playerA.position : Vector3.zero;
-            spawnB = playerB != null ? playerB.position : Vector3.zero;
+            if (config == null)
+                throw new System.Exception("LevelManager: config not assigned");
+
+            lives = config.MaxLives;
+            Vector3 mid = Vector3.Lerp(
+                playerA != null ? playerA.position : Vector3.zero,
+                playerB != null ? playerB.position : Vector3.zero,
+                0.5f);
+            checkpoint = mid;
         }
 
         void OnEnable()
@@ -41,9 +51,23 @@ namespace CGJ2026
             EventBus.Off(E.PlayerFell);
         }
 
-        void OnPlayerFell(object data)
+        public void SetCheckpoint(Vector3 position)
         {
-            ResetPlayers();
+            checkpoint = position;
+        }
+
+        void OnPlayerFell(object _)
+        {
+            lives--;
+            EventBus.Emit(E.LivesChanged, lives);
+
+            if (lives <= 0)
+            {
+                EventBus.Emit(E.GameOver);
+                return;
+            }
+
+            RespawnPlayers();
         }
 
         public void PlayerReachedWin(int playerIndex)
@@ -55,13 +79,15 @@ namespace CGJ2026
                 EventBus.Emit(E.LevelComplete);
         }
 
-        public void ResetPlayers()
+        void RespawnPlayers()
         {
+            Vector3 respawnPos = checkpoint + Vector3.up * config.RespawnHeightOffset;
+
             var pcA = playerA != null ? playerA.GetComponent<PlayerController>() : null;
             var pcB = playerB != null ? playerB.GetComponent<PlayerController>() : null;
 
-            if (playerA != null) playerA.position = spawnA;
-            if (playerB != null) playerB.position = spawnB;
+            if (playerA != null) playerA.position = respawnPos;
+            if (playerB != null) playerB.position = respawnPos + Vector3.right * 0.5f; // slight offset so they don't stack
 
             pcA?.ResetToHuman();
             pcB?.ResetToHuman();

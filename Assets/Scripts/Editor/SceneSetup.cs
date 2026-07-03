@@ -70,6 +70,31 @@ namespace CGJ2026
             rsSo.FindProperty("maxLength").floatValue = config.MaxRopeLength;
             rsSo.ApplyModifiedProperties();
 
+            // ── Level Manager ─────────────────────────────────
+            var lmGo = new GameObject("LevelManager");
+            var lm = lmGo.AddComponent<LevelManager>();
+            var lmSo = new SerializedObject(lm);
+            lmSo.FindProperty("playerA").objectReferenceValue = p1.transform;
+            lmSo.FindProperty("playerB").objectReferenceValue = p2.transform;
+            lmSo.FindProperty("config").objectReferenceValue = config;
+            lmSo.ApplyModifiedProperties();
+
+            // ── Checkpoint (spawn area) ───────────────────────
+            CreateCheckpoint("Checkpoint_Start", new Vector3(0, -3.5f, 0), new Vector2(4, 2f));
+
+            // ── Win Zone ──────────────────────────────────────
+            var winZone = CreateTriggerZone("WinZone",
+                new Vector3(0, 7.5f, 0), new Vector2(8, 0.5f));
+            winZone.AddComponent<WinZone>();
+
+            // ── Death Zone ────────────────────────────────────
+            var deathZone = CreateTriggerZone("DeathZone",
+                new Vector3(0, -8f, 0), new Vector2(30, 1f));
+            deathZone.AddComponent<DeathZone>();
+
+            // ── Test Enemy ────────────────────────────────────
+            CreateEnemy("Enemy_Test", new Vector3(0, -1.5f, 0), groundLayer);
+
             // ── Persistent Managers ───────────────────────────
             var gmGo = new GameObject("GameManager");
             gmGo.AddComponent<GameManager>();
@@ -117,14 +142,23 @@ namespace CGJ2026
             // ── Level Manager ─────────────────────────────────
             var lmGo = new GameObject("LevelManager");
             var lm = lmGo.AddComponent<LevelManager>();
+            var config = AssetDatabase.LoadAssetAtPath<PlayerConfig>(ConfigAssetPath);
             var lmSo = new SerializedObject(lm);
             lmSo.FindProperty("playerA").objectReferenceValue = p1.transform;
             lmSo.FindProperty("playerB").objectReferenceValue = p2.transform;
             lmSo.FindProperty("winZone").objectReferenceValue = winZone.transform;
+            lmSo.FindProperty("config").objectReferenceValue = config;
             lmSo.ApplyModifiedProperties();
 
+            // ── Checkpoint ────────────────────────────────────
+            CreateCheckpoint("Checkpoint_Start", new Vector3(0, -3.5f, 0), new Vector2(4, 2f));
+
+            // ── Test Enemy ────────────────────────────────────
+            int groundLayer = LayerMask.NameToLayer("Ground");
+            CreateEnemy("Enemy_Test", new Vector3(0, -1.5f, 0), groundLayer);
+
             EditorSceneManager.MarkSceneDirty(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-            Debug.Log("Level flow added: LevelManager, WinZone, DeathZone.");
+            Debug.Log("Level flow added: LevelManager, WinZone, DeathZone, Checkpoint, Enemy.");
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -410,6 +444,43 @@ namespace CGJ2026
             buildScenes.CopyTo(newScenes, 0);
             newScenes[^1] = new EditorBuildSettingsScene(path, true);
             EditorBuildSettings.scenes = newScenes;
+        }
+
+        static GameObject CreateCheckpoint(string name, Vector3 pos, Vector2 size)
+        {
+            var go = new GameObject(name);
+            go.transform.position = pos;
+
+            var col = go.AddComponent<BoxCollider2D>();
+            col.isTrigger = true;
+            col.size = size;
+
+            go.AddComponent<Checkpoint>();
+            return go;
+        }
+
+        static GameObject CreateEnemy(string name, Vector3 pos, int groundLayer)
+        {
+            var go = new GameObject(name);
+            go.transform.position = pos;
+            go.layer = 0;
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+            sr.color = new Color(0.9f, 0.2f, 0.2f);
+            sr.drawMode = SpriteDrawMode.Sliced;
+            sr.size = new Vector2(0.8f, 0.8f);
+
+            var rb = go.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 3f;
+            rb.drag = 2f;
+            rb.mass = 2f;
+
+            var col = go.AddComponent<BoxCollider2D>();
+            col.size = new Vector2(0.8f, 0.8f);
+
+            go.AddComponent<Enemy>();
+            return go;
         }
 
         static void EnsureLayer(string name)

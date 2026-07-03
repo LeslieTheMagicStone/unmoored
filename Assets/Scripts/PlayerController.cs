@@ -56,6 +56,7 @@ namespace CGJ2026
                 throw new System.Exception($"PlayerController [{playerIndex}]: config not assigned");
 
             rb.gravityScale = config.GravityScale;
+            rb.drag = config.HumanDrag;
             if (groundCheck == null)
                 throw new System.Exception($"PlayerController [{playerIndex}]: groundCheck not assigned");
         }
@@ -89,6 +90,10 @@ namespace CGJ2026
                     coyoteTimer = 0f;
                     rb.AddForce(Vector2.up * config.JumpForce, ForceMode2D.Impulse);
                 }
+                else if (jumpPressed)
+                {
+                    jumpPressed = false; // consume stale input, don't jump on land
+                }
             }
         }
 
@@ -108,8 +113,7 @@ namespace CGJ2026
             if (form == CharacterForm.Human)
             {
                 form = CharacterForm.Anchor;
-                rb.velocity = Vector2.zero;
-                rb.bodyType = RigidbodyType2D.Kinematic;
+                rb.drag = config.AnchorDrag;
                 spriteRenderer.color = anchorColor;
                 transform.localScale = anchorScale;
                 EventBus.Emit(E.PlayerAnchored, this);
@@ -117,7 +121,7 @@ namespace CGJ2026
             else
             {
                 form = CharacterForm.Human;
-                rb.bodyType = RigidbodyType2D.Dynamic;
+                rb.drag = config.HumanDrag;
                 spriteRenderer.color = humanColor;
                 transform.localScale = humanScale;
                 EventBus.Emit(E.PlayerReleased, this);
@@ -129,7 +133,7 @@ namespace CGJ2026
             coyoteTimer = 0f;
             if (form == CharacterForm.Human) return;
             form = CharacterForm.Human;
-            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.drag = config.HumanDrag;
             rb.velocity = Vector2.zero;
             spriteRenderer.color = humanColor;
             transform.localScale = humanScale;

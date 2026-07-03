@@ -22,10 +22,20 @@ namespace CGJ2026
             DontDestroyOnLoad(gameObject);
         }
 
-        void OnEnable() => EventBus.On(E.LevelComplete, OnLevelComplete);
-        void OnDisable() => EventBus.Off(E.LevelComplete);
+        void OnEnable()
+        {
+            EventBus.On(E.LevelComplete, OnLevelComplete);
+            EventBus.On(E.GameOver, OnGameOver);
+        }
+
+        void OnDisable()
+        {
+            EventBus.Off(E.LevelComplete);
+            EventBus.Off(E.GameOver);
+        }
 
         void OnLevelComplete(object _) => LoadGameOver();
+        void OnGameOver(object _) => LoadGameOver();
 
         public void LoadMainMenu() => SceneManager.LoadScene(mainMenuScene);
         public void LoadGame() => SceneManager.LoadScene(gameScene);

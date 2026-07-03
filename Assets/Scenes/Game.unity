@@ -452,6 +452,7 @@ MonoBehaviour:
   playerA: {fileID: 1808772691}
   playerB: {fileID: 89390093}
   winZone: {fileID: 1359965851}
+  config: {fileID: 11400000, guid: d6936a913028c4b5e988e5672ad8b304, type: 2}
 --- !u!4 &504616217
 Transform:
   m_ObjectHideFlags: 0

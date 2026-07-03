@@ -11,6 +11,10 @@ namespace CGJ2026
         [SerializeField] float groundCheckRadius = 0.1f;
         [SerializeField] float gravityScale = 3f;
         [SerializeField] float coyoteTime = 0.08f;
+        [SerializeField] float humanDrag = 0.5f;
+        [SerializeField] float anchorDrag = 20f;
+        [SerializeField] int maxLives = 3;
+        [SerializeField] float respawnHeightOffset = 2f;
 
         public float MoveSpeed => moveSpeed;
         public float JumpForce => jumpForce;
@@ -18,5 +22,9 @@ namespace CGJ2026
         public float GroundCheckRadius => groundCheckRadius;
         public float GravityScale => gravityScale;
         public float CoyoteTime => coyoteTime;
+        public float HumanDrag => humanDrag;
+        public float AnchorDrag => anchorDrag;
+        public int MaxLives => maxLives;
+        public float RespawnHeightOffset => respawnHeightOffset;
     }
 }

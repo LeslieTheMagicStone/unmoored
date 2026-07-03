@@ -8,5 +8,7 @@ namespace CGJ2026
         public const string PlayerAnchored = "player_anchored";
         public const string PlayerReleased = "player_released";
         public const string PlayerFell      = "player_fell";
+        public const string LivesChanged   = "lives_changed";
+        public const string GameOver       = "game_over";
     }
 }
