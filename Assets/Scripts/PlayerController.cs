@@ -65,7 +65,7 @@ namespace CGJ2026
 
         void FixedUpdate()
         {
-            float halfW = 0.35f;
+            float halfW = 0.5f;
             float footY = col.bounds.min.y + 0.02f;
             Vector2 center = new(transform.position.x, footY);
             Vector2 left = center + Vector2.left * halfW;

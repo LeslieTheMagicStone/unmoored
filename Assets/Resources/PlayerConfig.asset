@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PlayerConfig
   m_EditorClassIdentifier: 
   moveSpeed: 5
-  jumpForce: 30
+  jumpForce: 20
   maxRopeLength: 6
   groundCheckRadius: 0.1
   gravityScale: 10
@@ -27,5 +27,5 @@ MonoBehaviour:
   anchorVerticalTolerance: 0.4
   swingForce: 40
   swingReactiveForce: 8
-  maxLives: 3
+  maxLives: 100
   respawnHeightOffset: 2

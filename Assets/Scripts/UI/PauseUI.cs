@@ -152,7 +152,9 @@ namespace CGJ2026
         void Restart()
         {
             Time.timeScale = 1f;
-            GameManager.Instance?.LoadGame();
+            panel.SetActive(false);
+            isPaused = false;
+            LevelManager.Instance?.RespawnPlayers();
         }
 
         void OnDisable()

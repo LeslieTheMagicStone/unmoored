@@ -80,7 +80,7 @@ namespace CGJ2026
                 EventBus.Emit(E.LevelComplete);
         }
 
-        void RespawnPlayers()
+        public void RespawnPlayers()
         {
             Vector3 respawnPos = checkpoint + Vector3.up * config.RespawnHeightOffset;
 
