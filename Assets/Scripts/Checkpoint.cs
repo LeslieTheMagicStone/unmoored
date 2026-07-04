@@ -9,6 +9,8 @@ namespace CGJ2026
         [SerializeField] Sprite inactiveSprite;
         [SerializeField] Sprite activatedSprite;
         [SerializeField] float respawnHeightOffset = 2f;
+        [SerializeField] RisingWater risingWater;
+        [SerializeField] float waterTargetY;
 
         SpriteRenderer spriteRenderer;
         bool activated;
@@ -57,6 +59,9 @@ namespace CGJ2026
 
             Juice.CheckpointBurst(transform.position);
             EventBus.Emit(E.CheckpointReached, pc.PlayerIndex);
+
+            if (risingWater != null)
+                risingWater.RiseTo(waterTargetY);
         }
     }
 }
