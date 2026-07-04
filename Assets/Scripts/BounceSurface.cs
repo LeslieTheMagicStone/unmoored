@@ -32,8 +32,6 @@ namespace CGJ2026
                 t = -999f;
             if (Time.time - t < cooldown) return;
 
-            if (pc.transform.position.y < surfaceCollider.bounds.max.y) return;
-
             lastBounce[pc] = Time.time;
 
             var rb = pc.Body;
