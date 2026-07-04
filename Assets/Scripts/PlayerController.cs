@@ -39,7 +39,7 @@ namespace CGJ2026
         bool snappedToAnchorPoint;
         RopeSystem ropeSystem;
         readonly RaycastHit2D[] anchorSnapHits = new RaycastHit2D[8];
-        static readonly float[] FootRayOffsets = { 0f, -0.5f, 0.5f, -0.9f, 0.9f };
+        static readonly float[] FootRayOffsets = { 0f, -0.5f, 0.5f, -1.05f, 1.05f };
         const float FootRayDistance = 0.08f;
         const float LedgeHorizontalReach = 0.25f;
 
@@ -79,6 +79,9 @@ namespace CGJ2026
             float footY = col.bounds.min.y + 0.01f;
             float x = col.bounds.center.x;
             isGrounded = CastFootRays(footY, x, out _);
+
+            if (isGrounded && form == CharacterForm.Human)
+                TrySlideOffEdge(footY, x);
 
             // if (form == CharacterForm.Human && !isGrounded && Mathf.Abs(moveInput) > 0.1f)
             //     TryLedgeAssist();
@@ -291,6 +294,39 @@ namespace CGJ2026
 
             hit = default;
             return false;
+        }
+
+        void TrySlideOffEdge(float footY, float centerX)
+        {
+            float halfW = col.bounds.extents.x;
+            bool centerSupported = false;
+            for (int i = 0; i < 3; i++)
+            {
+                var h = Physics2D.Raycast(
+                    new Vector2(centerX + FootRayOffsets[i] * halfW, footY),
+                    Vector2.down, FootRayDistance, groundLayer);
+                if (h.collider != null && h.normal.y > 0.5f)
+                {
+                    centerSupported = true;
+                    break;
+                }
+            }
+            if (centerSupported) return;
+
+            bool rightSupport = Physics2D.Raycast(
+                new Vector2(centerX + halfW * 0.9f, footY),
+                Vector2.down, FootRayDistance, groundLayer).collider != null;
+            bool leftSupport = Physics2D.Raycast(
+                new Vector2(centerX - halfW * 0.9f, footY),
+                Vector2.down, FootRayDistance, groundLayer).collider != null;
+
+            float slideDir = 0f;
+            if (rightSupport && !leftSupport) slideDir = -1f;
+            else if (leftSupport && !rightSupport) slideDir = 1f;
+            if (slideDir == 0f) return;
+            if (Mathf.Abs(moveInput) > 0.1f && Mathf.Sign(moveInput) != Mathf.Sign(slideDir)) return;
+
+            rb.velocity = new Vector2(slideDir * 1.5f, rb.velocity.y);
         }
 
         void TryLedgeAssist()
