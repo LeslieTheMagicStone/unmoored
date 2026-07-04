@@ -39,7 +39,7 @@ namespace CGJ2026
         bool snappedToAnchorPoint;
         RopeSystem ropeSystem;
         readonly RaycastHit2D[] anchorSnapHits = new RaycastHit2D[8];
-        static readonly float[] FootRayOffsets = { 0f, -0.5f, 0.5f, -0.75f, 0.75f };
+        static readonly float[] FootRayOffsets = { 0f, -0.5f, 0.5f, -0.9f, 0.9f };
         const float FootRayDistance = 0.08f;
         const float LedgeHorizontalReach = 0.25f;
 
@@ -76,8 +76,8 @@ namespace CGJ2026
 
         void FixedUpdate()
         {
-            float footY = col.bounds.min.y + 0.02f;
-            float x = transform.position.x;
+            float footY = col.bounds.min.y + 0.01f;
+            float x = col.bounds.center.x;
             isGrounded = CastFootRays(footY, x, out _);
 
             // if (form == CharacterForm.Human && !isGrounded && Mathf.Abs(moveInput) > 0.1f)
@@ -266,8 +266,8 @@ namespace CGJ2026
 
         public ConveyorTerrain GetConveyorUnderfoot()
         {
-            float footY = col.bounds.min.y + 0.02f;
-            float x = transform.position.x;
+            float footY = col.bounds.min.y + 0.01f;
+            float x = col.bounds.center.x;
 
             if (!CastFootRays(footY, x, out RaycastHit2D hit))
                 return null;
@@ -275,12 +275,13 @@ namespace CGJ2026
             return hit.collider.GetComponentInParent<ConveyorTerrain>();
         }
 
-        bool CastFootRays(float footY, float x, out RaycastHit2D hit)
+        bool CastFootRays(float footY, float centerX, out RaycastHit2D hit)
         {
+            float halfW = col.bounds.extents.x;
             for (int i = 0; i < FootRayOffsets.Length; i++)
             {
                 hit = Physics2D.Raycast(
-                    new Vector2(x + FootRayOffsets[i], footY),
+                    new Vector2(centerX + FootRayOffsets[i] * halfW, footY),
                     Vector2.down,
                     FootRayDistance,
                     groundLayer);
