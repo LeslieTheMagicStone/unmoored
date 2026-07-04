@@ -29,12 +29,14 @@ namespace CGJ2026
         Rigidbody2D rb;
         BoxCollider2D col;
         float moveInput;
-        bool jumpPressed;
+        float jumpBufferTimer;
+        bool jumpHeld;
         bool anchorTogglePressed;
         bool isGrounded;
         bool wasGrounded;
         float coyoteTimer;
         bool justJumped;
+        bool jumpCutApplied;
         Vector2 snapNormal;
         bool snappedToAnchorPoint;
         RopeSystem ropeSystem;
@@ -93,7 +95,7 @@ namespace CGJ2026
 
             if (form == CharacterForm.Anchor)
             {
-                jumpPressed = false;
+                jumpBufferTimer = 0f;
                 if (isGrounded && rb.bodyType != RigidbodyType2D.Kinematic)
                 {
                     rb.bodyType = RigidbodyType2D.Kinematic;
@@ -111,6 +113,7 @@ namespace CGJ2026
                 }
                 coyoteTimer = config.CoyoteTime;
                 justJumped = false;
+                jumpCutApplied = false;
             }
             else
                 coyoteTimer -= Time.fixedDeltaTime;
@@ -132,17 +135,24 @@ namespace CGJ2026
                 if (!canSwing)
                     ApplyAirControl();
             }
-            if (jumpPressed && coyoteTimer > 0f)
+            if (jumpBufferTimer > 0f && coyoteTimer > 0f)
             {
-                jumpPressed = false;
+                jumpBufferTimer = 0f;
                 coyoteTimer = 0f;
                 justJumped = true;
+                jumpHeld = true;
                 rb.AddForce(Vector2.up * config.JumpForce, ForceMode2D.Impulse);
                 AudioManager.Instance?.PlayJump();
             }
-            else if (jumpPressed)
+            else if (isGrounded)
             {
-                jumpPressed = false;
+                jumpBufferTimer -= Time.fixedDeltaTime;
+            }
+
+            if (!jumpHeld && !jumpCutApplied && rb.velocity.y > 0f && !isGrounded)
+            {
+                rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * config.JumpCutMultiplier);
+                jumpCutApplied = true;
             }
 
             wasGrounded = isGrounded;
@@ -155,7 +165,13 @@ namespace CGJ2026
             if (Input.GetKey(moveRightKey)) h += 1f;
             moveInput = h;
 
-            if (Input.GetKeyDown(jumpKey)) jumpPressed = true;
+            if (Input.GetKeyDown(jumpKey))
+            {
+                jumpBufferTimer = config.JumpBufferTime;
+                jumpHeld = true;
+            }
+            if (Input.GetKeyUp(jumpKey))
+                jumpHeld = false;
             if (Input.GetKeyDown(anchorKey)) anchorTogglePressed = true;
 
             if (Input.GetKey(reelKey))
@@ -180,7 +196,7 @@ namespace CGJ2026
         {
             bool wasAnchored = form == CharacterForm.Anchor;
             coyoteTimer = 0f;
-            jumpPressed = false;
+            jumpBufferTimer = 0f;
             RestoreHumanState(wasAnchored);
             rb.velocity = Vector2.zero;
             rb.angularVelocity = 0f;
@@ -189,7 +205,7 @@ namespace CGJ2026
         void EnterAnchorForm()
         {
             form = CharacterForm.Anchor;
-            jumpPressed = false;
+            jumpBufferTimer = 0f;
             coyoteTimer = 0f;
             rb.angularVelocity = 0f;
             rb.mass = config.AnchorMass;

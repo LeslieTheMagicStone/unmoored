@@ -25,6 +25,8 @@ namespace CGJ2026
         [SerializeField] float groundFriction = 1f;
         [SerializeField] float groundBounciness = 0f;
         [SerializeField] float ledgeAssistHeight = 0.35f;
+        [SerializeField] float jumpBufferTime = 0.1f;
+        [SerializeField] float jumpCutMultiplier = 0.5f;
 
         public float MoveSpeed => moveSpeed;
         public float JumpForce => jumpForce;
@@ -46,5 +48,7 @@ namespace CGJ2026
         public float GroundFriction => groundFriction;
         public float GroundBounciness => groundBounciness;
         public float LedgeAssistHeight => ledgeAssistHeight;
+        public float JumpBufferTime => jumpBufferTime;
+        public float JumpCutMultiplier => jumpCutMultiplier;
     }
 }
