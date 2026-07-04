@@ -5,33 +5,57 @@ namespace CGJ2026
 {
     public class Gate : MonoBehaviour
     {
-        [SerializeField] float openHeight = 4f;
         [SerializeField] float duration = 0.3f;
 
         Vector3 closedPos;
-        Vector3 openPos;
-        Tween moveTween;
+        Vector3 closedScale;
+        float topY;
+        float spriteHeight;
+        SpriteRenderer sr;
+        Tween scaleTween;
         bool closing;
 
         void Awake()
         {
+            sr = GetComponent<SpriteRenderer>();
             closedPos = transform.localPosition;
-            openPos = closedPos + Vector3.up * openHeight;
+            closedScale = transform.localScale;
+            spriteHeight = sr.size.y;
+            topY = closedPos.y + spriteHeight * closedScale.y * 0.5f;
         }
 
         public void Open()
         {
             closing = false;
-            moveTween?.Kill();
-            moveTween = transform.DOLocalMove(openPos, duration).SetEase(Ease.OutQuad);
+            scaleTween?.Kill();
+            scaleTween = DOTween.To(
+                () => transform.localScale.y,
+                y => ApplyScaleY(y),
+                0f,
+                duration).SetEase(Ease.OutQuad);
         }
 
         public void Close()
         {
             closing = true;
-            moveTween?.Kill();
-            moveTween = transform.DOLocalMove(closedPos, duration).SetEase(Ease.InQuad)
+            scaleTween?.Kill();
+            scaleTween = DOTween.To(
+                () => transform.localScale.y,
+                y => ApplyScaleY(y),
+                closedScale.y,
+                duration).SetEase(Ease.InQuad)
                 .OnComplete(() => closing = false);
+        }
+
+        void ApplyScaleY(float y)
+        {
+            Vector3 s = transform.localScale;
+            s.y = y;
+            transform.localScale = s;
+
+            Vector3 p = transform.localPosition;
+            p.y = topY - spriteHeight * y * 0.5f;
+            transform.localPosition = p;
         }
 
         void OnCollisionStay2D(Collision2D collision)

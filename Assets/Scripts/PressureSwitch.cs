@@ -1,17 +1,15 @@
-using DG.Tweening;
 using UnityEngine;
 
 namespace CGJ2026
 {
-    [RequireComponent(typeof(Collider2D))]
+    [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
     public class PressureSwitch : MonoBehaviour
     {
         [SerializeField] Gate targetGate;
-        [SerializeField] float pressDepth = 0.3f;
-        [SerializeField] float animDuration = 0.15f;
+        [SerializeField] Sprite offSprite;
+        [SerializeField] Sprite onSprite;
 
-        Vector3 unpressedPos;
-        Vector3 pressedPos;
+        SpriteRenderer sr;
         int bodiesOnSwitch;
 
         void Awake()
@@ -20,8 +18,9 @@ namespace CGJ2026
             if (!col.isTrigger)
                 throw new System.Exception("PressureSwitch collider must be set to IsTrigger");
 
-            unpressedPos = transform.localPosition;
-            pressedPos = unpressedPos + Vector3.down * pressDepth;
+            sr = GetComponent<SpriteRenderer>();
+            sr.drawMode = SpriteDrawMode.Simple;
+            sr.sprite = offSprite;
         }
 
         void OnTriggerEnter2D(Collider2D other)
@@ -29,10 +28,7 @@ namespace CGJ2026
             if (other.GetComponent<PlayerController>() == null) return;
             bodiesOnSwitch++;
             if (bodiesOnSwitch == 1)
-            {
-                transform.DOKill();
-                transform.DOLocalMove(pressedPos, animDuration).SetEase(Ease.OutQuad);
-            }
+                SwapSprite(onSprite);
             targetGate?.Open();
         }
 
@@ -42,10 +38,22 @@ namespace CGJ2026
             bodiesOnSwitch = Mathf.Max(0, bodiesOnSwitch - 1);
             if (bodiesOnSwitch == 0)
             {
-                transform.DOKill();
-                transform.DOLocalMove(unpressedPos, animDuration).SetEase(Ease.OutBack);
+                SwapSprite(offSprite);
                 targetGate?.Close();
             }
+        }
+
+        void SwapSprite(Sprite target)
+        {
+            if (sr.sprite == target) return;
+
+            float oldHeight = sr.sprite != null ? sr.sprite.bounds.size.y * transform.localScale.y : 0f;
+            sr.sprite = target;
+            float newHeight = target.bounds.size.y * transform.localScale.y;
+
+            Vector3 p = transform.localPosition;
+            p.y += (newHeight - oldHeight) * 0.5f;
+            transform.localPosition = p;
         }
     }
 }
