@@ -8,8 +8,8 @@ namespace CGJ2026
         [SerializeField] Sprite idleSprite;
         [SerializeField] Sprite[] walkSprites;
         [SerializeField] Sprite[] jumpSprites;
-        [SerializeField] Sprite anchorSprite;
-        [SerializeField] Sprite anchorUpSprite;
+        [SerializeField] Sprite anchorSprite;    // down (standing)
+        [SerializeField] Sprite anchorUpSprite;  // up / left / right (flipX for right)
         [SerializeField] float fps = 12f;
 
         SpriteRenderer spriteRenderer;
@@ -17,7 +17,6 @@ namespace CGJ2026
         float takeoffTimer;
         int walkFrame;
         int takeoffFrame;
-        bool wasGrounded;
 
         void Awake()
         {
@@ -31,10 +30,21 @@ namespace CGJ2026
             bool isGrounded = controller.IsGrounded;
 
             Sprite result;
+            bool flip = false;
             if (controller.Form == CharacterForm.Anchor)
             {
-                bool anchoredAbove = controller.SnappedToAnchorPoint || controller.SnapNormal.y < -0.5f;
-                result = anchoredAbove && anchorUpSprite != null ? anchorUpSprite : anchorSprite;
+                Vector2 n = controller.SnapNormal;
+                if (n.y < -0.5f)
+                    result = anchorUpSprite != null ? anchorUpSprite : anchorSprite;
+                else if (n.x < -0.5f)
+                    result = anchorUpSprite != null ? anchorUpSprite : anchorSprite;
+                else if (n.x > 0.5f)
+                {
+                    result = anchorUpSprite != null ? anchorUpSprite : anchorSprite;
+                    flip = true;
+                }
+                else
+                    result = anchorSprite;
             }
             else if (!isGrounded && jumpSprites.Length >= 3)
             {
@@ -74,10 +84,10 @@ namespace CGJ2026
             }
 
             spriteRenderer.sprite = result;
-            if (controller.Form != CharacterForm.Anchor && controller.MoveInput != 0f)
+            if (controller.Form == CharacterForm.Anchor)
+                spriteRenderer.flipX = flip;
+            else if (controller.MoveInput != 0f)
                 spriteRenderer.flipX = controller.MoveInput < 0f;
-
-            wasGrounded = isGrounded;
         }
     }
 }
