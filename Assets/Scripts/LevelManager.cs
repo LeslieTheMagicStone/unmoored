@@ -108,6 +108,8 @@ namespace CGJ2026
 
             aReachedWin = false;
             bReachedWin = false;
+
+            EventBus.Emit(E.PlayerRespawned);
         }
     }
 }

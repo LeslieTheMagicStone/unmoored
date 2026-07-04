@@ -12,5 +12,6 @@ namespace CGJ2026
         public const string LivesChanged      = "lives_changed";
         public const string GameOver          = "game_over";        // lives exhausted
         public const string CheckpointReached = "checkpoint_reached";
+        public const string PlayerRespawned   = "player_respawned";
     }
 }

@@ -34,12 +34,14 @@ namespace CGJ2026
         {
             EventBus.On(E.PlayerAnchored, OnPlayerAnchored);
             EventBus.On(E.PlayerReleased, OnPlayerReleased);
+            EventBus.On(E.PlayerRespawned, OnPlayerRespawned);
         }
 
         void OnDisable()
         {
             EventBus.Off(E.PlayerAnchored, OnPlayerAnchored);
             EventBus.Off(E.PlayerReleased, OnPlayerReleased);
+            EventBus.Off(E.PlayerRespawned, OnPlayerRespawned);
         }
 
         void OnCollisionStay2D(Collision2D collision)
@@ -56,15 +58,16 @@ namespace CGJ2026
 
         void OnPlayerAnchored(object data)
         {
-            if (broken || triggered) return;
             var pc = data as PlayerController;
             if (pc == null) return;
+            if (broken) return;
 
-            if (!IsColliderOnThisPlatform(pc.AnchoredCollider))
+            if (!PlayerIsOnPlatform(pc))
                 return;
 
             anchoredPlayers.Add(pc);
-            Activate();
+            if (!triggered)
+                Activate();
         }
 
         void OnPlayerReleased(object data)
@@ -74,10 +77,20 @@ namespace CGJ2026
             anchoredPlayers.Remove(pc);
         }
 
-        bool IsColliderOnThisPlatform(Collider2D c)
+        void OnPlayerRespawned(object _)
         {
-            if (c == null) return false;
-            return c.transform == transform || c.transform.IsChildOf(transform);
+            if (broken || triggered)
+                Respawn();
+        }
+
+        bool PlayerIsOnPlatform(PlayerController pc)
+        {
+            Bounds b = platformCollider.bounds;
+            Vector2 pos = pc.transform.position;
+            float margin = 1.0f;
+            bool result = pos.x > b.min.x - margin && pos.x < b.max.x + margin
+                && pos.y > b.min.y - margin && pos.y < b.max.y + margin;
+            return result;
         }
 
         void Activate()
@@ -106,10 +119,8 @@ namespace CGJ2026
             AudioManager.Instance?.PlayCrumble();
             Juice.ShakeMedium();
 
-            for (int i = 0; i < anchoredPlayers.Count; i++)
-            {
+            for (int i = anchoredPlayers.Count - 1; i >= 0; i--)
                 anchoredPlayers[i].ReleaseFromSurface();
-            }
             anchoredPlayers.Clear();
 
             Transform t = visualTransform != null ? visualTransform : transform;
