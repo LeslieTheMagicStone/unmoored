@@ -55,6 +55,6 @@ namespace CGJ2026
 
         public static void ShakeLight() => CameraSetup.Shake(0.6f, 0.15f);
         public static void ShakeMedium() => CameraSetup.Shake(1.2f, 0.25f);
-        public static void ShakeHeavy() => CameraSetup.Shake(8f, 0.7f);
+        public static void ShakeHeavy() => CameraSetup.Shake(3f, 0.5f);
     }
 }
