@@ -38,6 +38,7 @@ namespace CGJ2026
         bool justJumped;
         Vector2 snapNormal;
         bool snappedToAnchorPoint;
+        Collider2D anchoredCollider;
         RopeSystem ropeSystem;
         readonly RaycastHit2D[] anchorSnapHits = new RaycastHit2D[8];
         static readonly float[] FootRayOffsets = { 0f, -0.5f, 0.5f, -1.05f, 1.05f };
@@ -56,6 +57,7 @@ namespace CGJ2026
         public float MoveInput => moveInput;
         public Vector2 SnapNormal => snapNormal;
         public bool SnappedToAnchorPoint => snappedToAnchorPoint;
+        public Collider2D AnchoredCollider => anchoredCollider;
 
         void Awake()
         {
@@ -187,6 +189,19 @@ namespace CGJ2026
             rb.angularVelocity = 0f;
         }
 
+        public void ReleaseFromSurface()
+        {
+            if (form != CharacterForm.Anchor) return;
+            if (rb.bodyType != RigidbodyType2D.Kinematic) return;
+
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.velocity = Vector2.zero;
+            snapNormal = Vector2.zero;
+            snappedToAnchorPoint = false;
+            anchoredCollider = null;
+            EventBus.Emit(E.PlayerReleased, this);
+        }
+
         void EnterAnchorForm()
         {
             form = CharacterForm.Anchor;
@@ -236,6 +251,7 @@ namespace CGJ2026
 
             snapNormal = bestNormal;
             snappedToAnchorPoint = bestCollider != null && bestCollider.GetComponent<AnchorPoint>() != null;
+            anchoredCollider = bestCollider;
             rb.position = bestPoint;
             rb.velocity = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Kinematic;
@@ -258,6 +274,7 @@ namespace CGJ2026
             rb.gravityScale = config.GravityScale;
             snapNormal = Vector2.zero;
             snappedToAnchorPoint = false;
+            anchoredCollider = null;
             if (wasAnchored)
                 EventBus.Emit(E.PlayerReleased, this);
         }

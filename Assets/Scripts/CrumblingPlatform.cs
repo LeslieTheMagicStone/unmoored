@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
@@ -18,6 +19,7 @@ namespace CGJ2026
         float timer;
         bool broken;
         bool triggered;
+        readonly List<PlayerController> anchoredPlayers = new List<PlayerController>();
 
         void Awake()
         {
@@ -25,19 +27,19 @@ namespace CGJ2026
             spriteRenderer = visualTransform != null ? visualTransform.GetComponent<SpriteRenderer>() : GetComponent<SpriteRenderer>();
             originalPos = visualTransform != null ? visualTransform.localPosition : transform.localPosition;
             if (spriteRenderer != null)
-            {
                 originalColor = spriteRenderer.color;
-            }
         }
 
         void OnEnable()
         {
             EventBus.On(E.PlayerAnchored, OnPlayerAnchored);
+            EventBus.On(E.PlayerReleased, OnPlayerReleased);
         }
 
         void OnDisable()
         {
             EventBus.Off(E.PlayerAnchored, OnPlayerAnchored);
+            EventBus.Off(E.PlayerReleased, OnPlayerReleased);
         }
 
         void OnCollisionStay2D(Collision2D collision)
@@ -58,11 +60,24 @@ namespace CGJ2026
             var pc = data as PlayerController;
             if (pc == null) return;
 
-            float dist = Vector2.Distance(pc.transform.position, platformCollider.bounds.ClosestPoint(pc.transform.position));
-            if (dist > 0.5f)
+            if (!IsColliderOnThisPlatform(pc.AnchoredCollider))
                 return;
 
+            anchoredPlayers.Add(pc);
             Activate();
+        }
+
+        void OnPlayerReleased(object data)
+        {
+            var pc = data as PlayerController;
+            if (pc == null) return;
+            anchoredPlayers.Remove(pc);
+        }
+
+        bool IsColliderOnThisPlatform(Collider2D c)
+        {
+            if (c == null) return false;
+            return c.transform == transform || c.transform.IsChildOf(transform);
         }
 
         void Activate()
@@ -91,9 +106,15 @@ namespace CGJ2026
             AudioManager.Instance?.PlayCrumble();
             Juice.ShakeMedium();
 
+            for (int i = 0; i < anchoredPlayers.Count; i++)
+            {
+                anchoredPlayers[i].ReleaseFromSurface();
+            }
+            anchoredPlayers.Clear();
+
             Transform t = visualTransform != null ? visualTransform : transform;
             t.DOShakePosition(0.2f, 0.12f, 30, 90);
-            spriteRenderer?.DOFade(0f, 0.25f).SetDelay(0.1f).OnComplete(() =>
+            spriteRenderer.DOFade(0f, 0.25f).SetDelay(0.1f).OnComplete(() =>
             {
                 spriteRenderer.enabled = false;
                 timer = 0f;
@@ -110,6 +131,7 @@ namespace CGJ2026
             platformCollider.enabled = true;
             spriteRenderer.enabled = true;
             spriteRenderer.color = originalColor;
+            anchoredPlayers.Clear();
             if (visualTransform != null)
                 visualTransform.localPosition = originalPos;
             else
