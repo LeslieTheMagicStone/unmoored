@@ -266,8 +266,11 @@ MainMenu → Game → GameOver（三场景闭环）
 - 解不开的 bug → 把相关代码文件路径贴给 AI
 - 新会话开头贴本文档路径，即可获取完整项目上下文
 
-### 场景配置规则
+### 场景与预制体配置规则
 
-**禁止 AI 直接编辑 `.unity` YAML 文件。** 场景序列化为 YAML 时 FileID 生成不可靠，手写场景数据已多次导致崩溃、重复 ID、渲染丢失。
+**禁止 AI 直接编辑 `.unity` 和 `.prefab` YAML 文件。** 场景序列化为 YAML 时 FileID 生成不可靠；预制体的 GUID/FID 引用链复杂，手写容易产生断裂引用、重复 ID、渲染丢失。
 
-需要往场景添加组件或 GameObject 时，AI 必须在 C# `Start()` 中通过 `new GameObject(...)` + `AddComponent<T>()` 动态创建。用户自行在 Unity Editor 中完成 Inspector 连线、sprite 拖拽、缩放调整等场景配置。
+- 需要往场景添加组件或 GameObject 时，AI 必须在 C# `Start()` 中通过 `new GameObject(...)` + `AddComponent<T>()` 动态创建。
+- 需要修改 Prefab 的 Inspector 值（sprite 引用、参数配置、组件开关等）时，AI 写清楚需要改哪个 prefab、哪个组件、哪个字段、改成什么值，由用户在 Unity Editor 中手动完成。
+- sprite pivot 设置、collider 尺寸调整等需要在 Editor 里拖拽的操作，同样由 AI 说明步骤、用户操作。
+- 以上规则也适用于 `.unity` 场景文件。
