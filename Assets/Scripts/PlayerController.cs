@@ -41,7 +41,7 @@ namespace CGJ2026
         Collider2D anchoredCollider;
         RopeSystem ropeSystem;
         readonly RaycastHit2D[] anchorSnapHits = new RaycastHit2D[8];
-        static readonly float[] FootRayOffsets = { 0f, -0.5f, 0.5f, -1.05f, 1.05f };
+        static readonly float[] FootRayOffsets = { 0f, -0.5f, 0.5f, -1.0f, 1.0f };
         const float FootRayDistance = 0.08f;
         const float LedgeHorizontalReach = 0.25f;
 
