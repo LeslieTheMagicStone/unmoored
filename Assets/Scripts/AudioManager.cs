@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 
 namespace CGJ2026
@@ -26,15 +27,27 @@ namespace CGJ2026
         [SerializeField] AudioClip checkpointClip;
         [SerializeField] AudioClip pauseClip;
 
+        [Header("Music")]
+        [SerializeField] AudioClip musicTrack;
+        [SerializeField, Range(0f, 1f)] float musicVolume = 0.5f;
+
         AudioSource source;
         AudioSource oneShotSource;
+        AudioSource musicSource;
         int walkIndex;
 
         public static AudioManager Instance { get; private set; }
 
         void Awake()
         {
+            if (Instance != null)
+            {
+                Destroy(gameObject);
+                return;
+            }
             Instance = this;
+            DontDestroyOnLoad(gameObject);
+
             source = gameObject.AddComponent<AudioSource>();
             source.playOnAwake = false;
             source.spatialBlend = 0f;
@@ -42,6 +55,28 @@ namespace CGJ2026
             oneShotSource = gameObject.AddComponent<AudioSource>();
             oneShotSource.playOnAwake = false;
             oneShotSource.spatialBlend = 0f;
+
+            musicSource = gameObject.AddComponent<AudioSource>();
+            musicSource.playOnAwake = false;
+            musicSource.spatialBlend = 0f;
+            musicSource.loop = true;
+            musicSource.volume = 0f;
+
+            if (musicTrack != null)
+                PlayMusic();
+        }
+
+        public void PlayMusic(float fadeDuration = 2f)
+        {
+            if (musicTrack == null) return;
+            musicSource.clip = musicTrack;
+            musicSource.Play();
+            musicSource.DOFade(musicVolume, fadeDuration);
+        }
+
+        public void StopMusic(float fadeDuration = 1f)
+        {
+            musicSource.DOFade(0f, fadeDuration).OnComplete(() => musicSource.Stop());
         }
 
         void OnEnable()
