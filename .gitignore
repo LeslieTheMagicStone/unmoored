@@ -99,8 +99,10 @@ InitTestScene*.unity*
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
 
-# Allow different Unity 2022.3.x minor versions to collaborate
+# Allow different Unity 2022.3.x minor versions to collaborate — ignore package differences
+/Packages/
 /ProjectSettings/ProjectVersion.txt
+/ProjectSettings/PackageManagerSettings.asset
 
 # vscode settings
 .vscode/
