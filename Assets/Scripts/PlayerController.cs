@@ -34,6 +34,7 @@ namespace CGJ2026
         bool wasGrounded;
         float coyoteTimer;
         bool justJumped;
+        Vector2 snapNormal;
         RopeSystem ropeSystem;
         readonly RaycastHit2D[] anchorSnapHits = new RaycastHit2D[8];
         static readonly float[] FootRayOffsets = { 0f, -0.5f, 0.5f, -0.75f, 0.75f };
@@ -49,6 +50,7 @@ namespace CGJ2026
         public PlayerConfig Config => config;
         public Rigidbody2D Body => rb;
         public float MoveInput => moveInput;
+        public Vector2 SnapNormal => snapNormal;
 
         void Awake()
         {
@@ -196,6 +198,7 @@ namespace CGJ2026
 
             Vector2[] directions = { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
             Vector2 bestPoint = Vector2.zero;
+            Vector2 bestNormal = Vector2.zero;
             float bestDist = float.MaxValue;
 
             for (int i = 0; i < 4; i++)
@@ -211,12 +214,14 @@ namespace CGJ2026
                         Vector2 surfacePoint = anchorSnapHits[j].point;
                         Vector2 normal = anchorSnapHits[j].normal;
                         bestPoint = surfacePoint + normal * halfH * 1.15f;
+                        bestNormal = normal;
                     }
                 }
             }
 
             if (bestDist >= float.MaxValue) return;
 
+            snapNormal = bestNormal;
             rb.position = bestPoint;
             rb.velocity = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Kinematic;
@@ -237,6 +242,7 @@ namespace CGJ2026
             rb.mass = config.HumanMass;
             rb.drag = config.HumanDrag;
             rb.gravityScale = config.GravityScale;
+            snapNormal = Vector2.zero;
             if (wasAnchored)
                 EventBus.Emit(E.PlayerReleased, this);
         }

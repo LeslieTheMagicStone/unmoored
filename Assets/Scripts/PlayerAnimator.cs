@@ -9,6 +9,7 @@ namespace CGJ2026
         [SerializeField] Sprite[] walkSprites;
         [SerializeField] Sprite[] jumpSprites;
         [SerializeField] Sprite anchorSprite;
+        [SerializeField] Sprite anchorUpSprite;
         [SerializeField] float fps = 12f;
 
         SpriteRenderer spriteRenderer;
@@ -32,7 +33,8 @@ namespace CGJ2026
             Sprite result;
             if (controller.Form == CharacterForm.Anchor)
             {
-                result = anchorSprite;
+                bool anchoredAbove = controller.SnapNormal.y < -0.5f;
+                result = anchoredAbove && anchorUpSprite != null ? anchorUpSprite : anchorSprite;
             }
             else if (!isGrounded && jumpSprites.Length >= 3)
             {
