@@ -14,6 +14,10 @@ namespace CGJ2026
         static Vector3 smoothPos;
         static Vector3 shakeOffset;
         Vector3 velocity;
+        float defaultSize;
+
+        public static Vector2? FocusOverride { get; set; }
+        public static float? SizeOverride { get; set; }
 
         public static void Shake(float intensity, float duration)
         {
@@ -32,6 +36,7 @@ namespace CGJ2026
             cam = Camera.main;
             if (cam != null)
             {
+                defaultSize = cam.orthographicSize;
                 cam.orthographicSize = orthoSize;
                 smoothPos = cam.transform.position;
             }
@@ -39,10 +44,19 @@ namespace CGJ2026
 
         void LateUpdate()
         {
-            if (playerA == null || playerB == null || cam == null) return;
+            if (cam == null) return;
 
-            Vector3 mid = Vector3.Lerp(playerA.position, playerB.position, 0.5f) + Vector3.back * 10f;
-            smoothPos = Vector3.SmoothDamp(smoothPos, mid, ref velocity, smoothTime);
+            cam.orthographicSize = SizeOverride ?? orthoSize;
+
+            Vector3 target;
+            if (FocusOverride.HasValue)
+                target = (Vector3)FocusOverride.Value + Vector3.back * 10f;
+            else if (playerA != null && playerB != null)
+                target = Vector3.Lerp(playerA.position, playerB.position, 0.5f) + Vector3.back * 10f;
+            else
+                return;
+
+            smoothPos = Vector3.SmoothDamp(smoothPos, target, ref velocity, smoothTime);
             cam.transform.position = smoothPos + shakeOffset;
         }
 
