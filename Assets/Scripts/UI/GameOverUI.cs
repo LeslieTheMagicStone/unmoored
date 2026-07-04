@@ -15,6 +15,8 @@ namespace CGJ2026
                 esGo.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
             }
 
+            bool won = GameManager.IsGameClear;
+
             var canvasGo = new GameObject("Canvas");
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -25,17 +27,18 @@ namespace CGJ2026
             titleGo.transform.SetParent(canvasGo.transform, false);
             var title = titleGo.AddComponent<TextMeshProUGUI>();
             title.text = LocalizationManager.Instance != null
-                ? LocalizationManager.Instance.Get("gameover_title")
-                : "Game Over";
+                ? LocalizationManager.Instance.Get(won ? "gameclear_title" : "gameover_title")
+                : (won ? "You Win!" : "Game Over");
             title.fontSize = 64;
             title.alignment = TextAlignmentOptions.Center;
-            title.color = Color.white;
+            title.color = won ? new Color(1f, 0.85f, 0.2f) : Color.white;
             var titleRect = title.rectTransform;
             titleRect.anchorMin = new Vector2(0.5f, 0.7f);
             titleRect.anchorMax = new Vector2(0.5f, 0.7f);
             titleRect.sizeDelta = new Vector2(400, 80);
 
-            CreateButton(canvasGo.transform, "RetryBtn", new Vector2(0.5f, 0.45f), "gameover_retry",
+            CreateButton(canvasGo.transform, "RetryBtn", new Vector2(0.5f, 0.45f),
+                won ? "gameclear_again" : "gameover_retry",
                 () => GameManager.Instance.LoadGame());
             CreateButton(canvasGo.transform, "MenuBtn", new Vector2(0.5f, 0.3f), "gameover_menu",
                 () => GameManager.Instance.LoadMainMenu());

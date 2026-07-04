@@ -1,15 +1,11 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace CGJ2026
 {
     public static class EventBus
     {
         static readonly Dictionary<string, Action<object>> events = new();
-
-        [RuntimeInitializeOnLoadMethod]
-        static void Reset() => events.Clear();
 
         public static void On(string id, Action<object> handler)
         {

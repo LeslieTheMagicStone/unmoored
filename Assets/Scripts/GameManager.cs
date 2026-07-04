@@ -10,11 +10,16 @@ namespace CGJ2026
     {
         public static GameManager Instance { get; private set; }
 
-        [SerializeField] string gameScene = "Game";
         [SerializeField] string mainMenuScene = "MainMenu";
         [SerializeField] string gameOverScene = "GameOver";
+        [SerializeField] string[] levelScenes = { "Game" };
 
         CanvasGroup overlay;
+        int currentLevel;
+
+        public int CurrentLevel => currentLevel;
+        public int LevelCount => levelScenes.Length;
+        public static bool IsGameClear { get; private set; }
 
         void Awake()
         {
@@ -75,12 +80,43 @@ namespace CGJ2026
             EventBus.Off(E.GameOver, OnGameOver);
         }
 
-        void OnLevelComplete(object _) => LoadGameOver();
-        void OnGameOver(object _) => LoadGameOver();
+        void OnLevelComplete(object _)
+        {
+            currentLevel++;
+            if (currentLevel < levelScenes.Length)
+            {
+                StartCoroutine(Transition(levelScenes[currentLevel]));
+            }
+            else
+            {
+                IsGameClear = true;
+                StartCoroutine(Transition(gameOverScene));
+            }
+        }
 
-        public void LoadMainMenu() => StartCoroutine(Transition(mainMenuScene));
-        public void LoadGame() => StartCoroutine(Transition(gameScene));
-        public void LoadGameOver() => StartCoroutine(Transition(gameOverScene));
+        void OnGameOver(object _)
+        {
+            IsGameClear = false;
+            StartCoroutine(Transition(gameOverScene));
+        }
+
+        public void LoadMainMenu()
+        {
+            IsGameClear = false;
+            StartCoroutine(Transition(mainMenuScene));
+        }
+
+        public void LoadGame()
+        {
+            IsGameClear = false;
+            currentLevel = 0;
+            StartCoroutine(Transition(levelScenes[0]));
+        }
+
+        public void LoadGameOver()
+        {
+            StartCoroutine(Transition(gameOverScene));
+        }
 
         IEnumerator Transition(string sceneName)
         {

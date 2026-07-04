@@ -2466,7 +2466,7 @@ MonoBehaviour:
   releaseClip: {fileID: 8300000, guid: 834d17caa35cf4a83bab7195c596e097, type: 3}
   ropeTautClip: {fileID: 8300000, guid: 035f38f353a094469bdcc5b02f2816c2, type: 3}
   crumbleClip: {fileID: 8300000, guid: 8a6b81a7f318f4bc28c0101a2b55ea2e, type: 3}
-  stompClip: {fileID: 8300000, guid: c53a1dc4bad484d8fa83fdba7d14b11b, type: 3}
+  stompClip: {fileID: 8300000, guid: 253124601f16349679adfe82fe1bcecd, type: 3}
   deathClip: {fileID: 8300000, guid: 1d0d6ada984cf4cf8b68ba948c8fa741, type: 3}
   checkpointClip: {fileID: 8300000, guid: 853cd472d33844b12b69ec27ffb94f8c, type: 3}
   pauseClip: {fileID: 8300000, guid: a9857d7820d004c0abfadfaedd8221be, type: 3}
@@ -2696,9 +2696,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d370fae44410d49dd862d1fc44c0155b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameScene: Game
   mainMenuScene: MainMenu
   gameOverScene: GameOver
+  levelScenes:
+  - Level 1
+  - Level 2
+  - Level 3
 --- !u!4 &1332021977
 Transform:
   m_ObjectHideFlags: 0
@@ -4462,12 +4465,12 @@ PrefabInstance:
     - target: {fileID: 8190767288853212933, guid: d44fad990eea546eda911ac5ee40310e,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.699997
+      value: 63.35
       objectReference: {fileID: 0}
     - target: {fileID: 8190767288853212933, guid: d44fad990eea546eda911ac5ee40310e,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.1099997
+      value: -3.37
       objectReference: {fileID: 0}
     - target: {fileID: 8190767288853212933, guid: d44fad990eea546eda911ac5ee40310e,
         type: 3}
@@ -4749,7 +4752,7 @@ PrefabInstance:
     - target: {fileID: 6845630531500238796, guid: a82b9183eaa814f38b10989defb379cc,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -42.2
+      value: -26.5
       objectReference: {fileID: 0}
     - target: {fileID: 6845630531500238796, guid: a82b9183eaa814f38b10989defb379cc,
         type: 3}
@@ -5084,12 +5087,12 @@ PrefabInstance:
     - target: {fileID: 225425222281633653, guid: d3a859545e6d34e0b97aaf7b36e82329,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.7
+      value: 61.35
       objectReference: {fileID: 0}
     - target: {fileID: 225425222281633653, guid: d3a859545e6d34e0b97aaf7b36e82329,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.11
+      value: -3.3699996
       objectReference: {fileID: 0}
     - target: {fileID: 225425222281633653, guid: d3a859545e6d34e0b97aaf7b36e82329,
         type: 3}

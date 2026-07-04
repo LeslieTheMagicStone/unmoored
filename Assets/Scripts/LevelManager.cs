@@ -13,6 +13,7 @@ namespace CGJ2026
 
         Vector3 checkpoint;
         int lives;
+        float deathCooldown;
         bool aReachedWin;
         bool bReachedWin;
 
@@ -59,6 +60,9 @@ namespace CGJ2026
 
         void OnPlayerFell(object _)
         {
+            if (Time.time < deathCooldown) return;
+            deathCooldown = Time.time + 0.5f;
+
             lives--;
             EventBus.Emit(E.LivesChanged, lives);
             Juice.DeathFlash();
