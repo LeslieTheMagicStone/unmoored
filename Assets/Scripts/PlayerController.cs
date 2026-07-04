@@ -80,8 +80,8 @@ namespace CGJ2026
             float x = transform.position.x;
             isGrounded = CastFootRays(footY, x, out _);
 
-            if (form == CharacterForm.Human && !isGrounded && Mathf.Abs(moveInput) > 0.1f)
-                TryLedgeAssist();
+            // if (form == CharacterForm.Human && !isGrounded && Mathf.Abs(moveInput) > 0.1f)
+            //     TryLedgeAssist();
 
             ConveyorTerrain conveyor = isGrounded ? GetConveyorUnderfoot() : null;
 
