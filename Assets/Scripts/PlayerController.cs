@@ -29,7 +29,7 @@ namespace CGJ2026
         Rigidbody2D rb;
         BoxCollider2D col;
         float moveInput;
-        float jumpBufferTimer;
+        bool jumpPressed;
         bool jumpHeld;
         bool anchorTogglePressed;
         bool isGrounded;
@@ -95,7 +95,7 @@ namespace CGJ2026
 
             if (form == CharacterForm.Anchor)
             {
-                jumpBufferTimer = 0f;
+                jumpPressed = false;
                 if (isGrounded && rb.bodyType != RigidbodyType2D.Kinematic)
                 {
                     rb.bodyType = RigidbodyType2D.Kinematic;
@@ -135,18 +135,18 @@ namespace CGJ2026
                 if (!canSwing)
                     ApplyAirControl();
             }
-            if (jumpBufferTimer > 0f && coyoteTimer > 0f)
+            if (jumpPressed && coyoteTimer > 0f)
             {
-                jumpBufferTimer = 0f;
+                jumpPressed = false;
                 coyoteTimer = 0f;
                 justJumped = true;
                 jumpHeld = true;
                 rb.AddForce(Vector2.up * config.JumpForce, ForceMode2D.Impulse);
                 AudioManager.Instance?.PlayJump();
             }
-            else if (isGrounded)
+            else if (jumpPressed)
             {
-                jumpBufferTimer -= Time.fixedDeltaTime;
+                jumpPressed = false;
             }
 
             if (!jumpHeld && !jumpCutApplied && rb.velocity.y > 0f && !isGrounded)
@@ -167,7 +167,7 @@ namespace CGJ2026
 
             if (Input.GetKeyDown(jumpKey))
             {
-                jumpBufferTimer = config.JumpBufferTime;
+                jumpPressed = true;
                 jumpHeld = true;
             }
             if (Input.GetKeyUp(jumpKey))
@@ -196,7 +196,7 @@ namespace CGJ2026
         {
             bool wasAnchored = form == CharacterForm.Anchor;
             coyoteTimer = 0f;
-            jumpBufferTimer = 0f;
+            jumpPressed = false;
             RestoreHumanState(wasAnchored);
             rb.velocity = Vector2.zero;
             rb.angularVelocity = 0f;
@@ -205,7 +205,7 @@ namespace CGJ2026
         void EnterAnchorForm()
         {
             form = CharacterForm.Anchor;
-            jumpBufferTimer = 0f;
+            jumpPressed = false;
             coyoteTimer = 0f;
             rb.angularVelocity = 0f;
             rb.mass = config.AnchorMass;
