@@ -19,6 +19,7 @@ namespace CGJ2026
 
         [Header("Environment")]
         [SerializeField] AudioClip crumbleClip;
+        [SerializeField] AudioClip stompClip;
 
         [Header("UI / Events")]
         [SerializeField] AudioClip deathClip;
@@ -79,6 +80,7 @@ namespace CGJ2026
         }
 
         public void PlayCrumble() => oneShotSource.PlayOneShot(crumbleClip);
+        public void PlayStomp() => oneShotSource.PlayOneShot(stompClip);
         public void PlayRopeTaut() => oneShotSource.PlayOneShot(ropeTautClip);
         public void PlayAnchorSnap() => oneShotSource.PlayOneShot(anchorSnapClip);
         public void PlayPause() => oneShotSource.PlayOneShot(pauseClip);

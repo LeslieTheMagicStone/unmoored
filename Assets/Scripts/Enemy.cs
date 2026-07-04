@@ -67,7 +67,7 @@ namespace CGJ2026
 
             if (playerRb.velocity.y < stompThreshold)
             {
-                Stomped(playerRb);
+                Stomped(pc, playerRb);
                 return;
             }
 
@@ -80,8 +80,17 @@ namespace CGJ2026
             EventBus.Emit(E.PlayerFell);
         }
 
-        void Stomped(Rigidbody2D playerRb)
+        void Stomped(PlayerController pc, Rigidbody2D playerRb)
         {
+            AudioManager.Instance?.PlayStomp();
+
+            if (pc.Form == CharacterForm.Anchor)
+            {
+                // Anchor form smashes through — no bounce, keep downward momentum
+                Destroy(gameObject);
+                return;
+            }
+
             playerRb.velocity = new Vector2(playerRb.velocity.x, 0f);
             playerRb.AddForce(Vector2.up * stompBounceForce, ForceMode2D.Impulse);
             Destroy(gameObject);
