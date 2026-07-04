@@ -161,3 +161,5 @@ MonoBehaviour:
   playerA: {fileID: 0}
   playerB: {fileID: 0}
   tautTolerance: 0.15
+  reelSpeed: 4
+  minReelLength: 1
