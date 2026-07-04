@@ -121,7 +121,7 @@ namespace CGJ2026
             {
                 Vector2 carry = conveyor != null ? conveyor.CurrentVelocity : Vector2.zero;
                 float vx = moveInput * config.MoveSpeed + carry.x;
-                float vy = isGrounded && conveyor != null ? carry.y : rb.velocity.y;
+                float vy = isGrounded && conveyor != null ? carry.y : Mathf.Max(0f, rb.velocity.y);
                 rb.velocity = new Vector2(vx, vy);
                 if (Mathf.Abs(moveInput) > 0.1f)
                     AudioManager.Instance?.PlayWalk();
@@ -285,7 +285,7 @@ namespace CGJ2026
                     Vector2.down,
                     FootRayDistance,
                     groundLayer);
-                if (hit.collider != null)
+                if (hit.collider != null && hit.normal.y > 0.5f && rb.velocity.y <= 0.1f)
                     return true;
             }
 
