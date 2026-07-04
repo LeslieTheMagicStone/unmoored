@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CGJ2026
@@ -11,6 +12,7 @@ namespace CGJ2026
 
         SpriteRenderer spriteRenderer;
         bool activated;
+        HashSet<PlayerController> playersInside = new HashSet<PlayerController>();
 
         void Awake()
         {
@@ -23,24 +25,38 @@ namespace CGJ2026
                 spriteRenderer.sprite = inactiveSprite;
         }
 
+        void OnEnable()  => EventBus.On(E.PlayerAnchored, OnPlayerAnchored);
+        void OnDisable() => EventBus.Off(E.PlayerAnchored, OnPlayerAnchored);
+
         void OnTriggerEnter2D(Collider2D other)
         {
-            if (other.GetComponent<PlayerController>() == null) return;
+            var pc = other.GetComponent<PlayerController>();
+            if (pc != null)
+                playersInside.Add(pc);
+        }
+
+        void OnTriggerExit2D(Collider2D other)
+        {
+            var pc = other.GetComponent<PlayerController>();
+            if (pc != null)
+                playersInside.Remove(pc);
+        }
+
+        void OnPlayerAnchored(object data)
+        {
+            var pc = data as PlayerController;
+            if (pc == null || !playersInside.Contains(pc)) return;
+            if (activated) return;
 
             Vector3 pos = transform.position + Vector3.up * respawnHeightOffset;
             LevelManager.Instance?.SetCheckpoint(pos);
 
-            if (!activated)
-            {
-                activated = true;
-                if (spriteRenderer != null)
-                    spriteRenderer.sprite = activatedSprite;
+            activated = true;
+            if (spriteRenderer != null)
+                spriteRenderer.sprite = activatedSprite;
 
-                Juice.CheckpointBurst(transform.position);
-
-                var pc = other.GetComponent<PlayerController>();
-                EventBus.Emit(E.CheckpointReached, pc.PlayerIndex);
-            }
+            Juice.CheckpointBurst(transform.position);
+            EventBus.Emit(E.CheckpointReached, pc.PlayerIndex);
         }
     }
 }
