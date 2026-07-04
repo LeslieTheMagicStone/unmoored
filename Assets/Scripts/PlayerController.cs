@@ -41,6 +41,7 @@ namespace CGJ2026
         readonly RaycastHit2D[] anchorSnapHits = new RaycastHit2D[8];
         static readonly float[] FootRayOffsets = { 0f, -0.5f, 0.5f, -0.75f, 0.75f };
         const float FootRayDistance = 0.08f;
+        const float LedgeHorizontalReach = 0.25f;
 
         public CharacterForm Form => form;
         public bool IsAnchored => form == CharacterForm.Anchor;
@@ -78,6 +79,10 @@ namespace CGJ2026
             float footY = col.bounds.min.y + 0.02f;
             float x = transform.position.x;
             isGrounded = CastFootRays(footY, x, out _);
+
+            if (form == CharacterForm.Human && !isGrounded && Mathf.Abs(moveInput) > 0.1f)
+                TryLedgeAssist();
+
             ConveyorTerrain conveyor = isGrounded ? GetConveyorUnderfoot() : null;
 
             if (anchorTogglePressed)
@@ -285,6 +290,43 @@ namespace CGJ2026
 
             hit = default;
             return false;
+        }
+
+        void TryLedgeAssist()
+        {
+            Bounds b = col.bounds;
+            float dir = Mathf.Sign(moveInput);
+            float extX = b.extents.x;
+
+            Vector2[] origins =
+            {
+                new(b.center.x + dir * extX, b.center.y),
+                new(b.center.x + dir * extX, b.max.y - 0.05f)
+            };
+
+            foreach (var origin in origins)
+            {
+                var hit = Physics2D.Raycast(origin, Vector2.right * dir, LedgeHorizontalReach, groundLayer);
+                if (hit.collider == null) continue;
+
+                float ledgeY = hit.collider.bounds.max.y;
+                float footY = b.min.y;
+                float gap = ledgeY - footY;
+
+                if (gap < 0f || gap > config.LedgeAssistHeight) continue;
+                if (ledgeY > b.max.y) continue;
+
+                float checkX = hit.point.x + dir * 0.1f;
+                var ceiling = Physics2D.Raycast(
+                    new Vector2(checkX, ledgeY + 0.02f),
+                    Vector2.up, b.size.y, groundLayer);
+                if (ceiling.collider != null) continue;
+
+                rb.position = new Vector2(rb.position.x, ledgeY + b.extents.y + 0.01f);
+                if (rb.velocity.y < 0f)
+                    rb.velocity = new Vector2(rb.velocity.x, 0f);
+                break;
+            }
         }
     }
 }
