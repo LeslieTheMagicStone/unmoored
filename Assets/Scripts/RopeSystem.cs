@@ -9,8 +9,6 @@ namespace CGJ2026
         [SerializeField] PlayerController playerA;
         [SerializeField] PlayerController playerB;
         [SerializeField] float tautTolerance = 0.15f;
-        [SerializeField] float reelSpeed = 4f;
-        [SerializeField] float minReelLength = 1f;
 
         static Material ropeMaterial;
 
@@ -19,7 +17,6 @@ namespace CGJ2026
         Rigidbody2D bodyA;
         Rigidbody2D bodyB;
         float currentLength;
-        bool reeling;
 
         public PlayerController PlayerA => playerA;
         public PlayerController PlayerB => playerB;
@@ -57,22 +54,13 @@ namespace CGJ2026
         void Update()
         {
             DrawRope();
-
-            if (reeling)
-                currentLength = Mathf.MoveTowards(currentLength, minReelLength, reelSpeed * Time.deltaTime);
-            else
-                currentLength = Mathf.MoveTowards(currentLength, MaxLength, reelSpeed * Time.deltaTime);
-
-            ropeJoint.distance = currentLength;
+            ropeJoint.distance = currentLength = MaxLength;
         }
 
         public bool IsTaut()
         {
             return Vector2.Distance(bodyA.position, bodyB.position) >= currentLength - tautTolerance;
         }
-
-        public void StartReel() => reeling = true;
-        public void StopReel() => reeling = false;
 
         public bool TryApplySwingInput(PlayerController player, float horizontalInput)
         {
