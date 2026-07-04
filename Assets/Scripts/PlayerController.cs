@@ -36,6 +36,8 @@ namespace CGJ2026
         bool justJumped;
         RopeSystem ropeSystem;
         readonly RaycastHit2D[] anchorSnapHits = new RaycastHit2D[8];
+        static readonly float[] FootRayOffsets = { 0f, -0.5f, 0.5f, -0.75f, 0.75f };
+        const float FootRayDistance = 0.08f;
 
         public CharacterForm Form => form;
         public bool IsAnchored => form == CharacterForm.Anchor;
@@ -70,11 +72,8 @@ namespace CGJ2026
         {
             float footY = col.bounds.min.y + 0.02f;
             float x = transform.position.x;
-            isGrounded = Physics2D.Raycast(new Vector2(x, footY), Vector2.down, 0.08f, groundLayer)
-                      || Physics2D.Raycast(new Vector2(x - 0.5f, footY), Vector2.down, 0.08f, groundLayer)
-                      || Physics2D.Raycast(new Vector2(x + 0.5f, footY), Vector2.down, 0.08f, groundLayer)
-                      || Physics2D.Raycast(new Vector2(x - 0.75f, footY), Vector2.down, 0.08f, groundLayer)
-                      || Physics2D.Raycast(new Vector2(x + 0.75f, footY), Vector2.down, 0.08f, groundLayer);
+            isGrounded = CastFootRays(footY, x, out _);
+            ConveyorTerrain conveyor = isGrounded ? GetConveyorUnderfoot() : null;
 
             if (anchorTogglePressed)
             {
@@ -110,9 +109,11 @@ namespace CGJ2026
 
             if (hasGroundControl)
             {
-                float vx = moveInput * config.MoveSpeed;
-                rb.velocity = new Vector2(vx, rb.velocity.y);
-                if (Mathf.Abs(vx) > 0.1f)
+                Vector2 carry = conveyor != null ? conveyor.CurrentVelocity : Vector2.zero;
+                float vx = moveInput * config.MoveSpeed + carry.x;
+                float vy = isGrounded && conveyor != null ? carry.y : rb.velocity.y;
+                rb.velocity = new Vector2(vx, vy);
+                if (Mathf.Abs(moveInput) > 0.1f)
                     AudioManager.Instance?.PlayWalk();
             }
             else if (moveInput != 0f)
@@ -243,6 +244,34 @@ namespace CGJ2026
         void ApplyAirControl()
         {
             rb.AddForce(config.SwingForce * 0.4f * Mathf.Sign(moveInput) * Vector2.right, ForceMode2D.Force);
+        }
+
+        public ConveyorTerrain GetConveyorUnderfoot()
+        {
+            float footY = col.bounds.min.y + 0.02f;
+            float x = transform.position.x;
+
+            if (!CastFootRays(footY, x, out RaycastHit2D hit))
+                return null;
+
+            return hit.collider.GetComponentInParent<ConveyorTerrain>();
+        }
+
+        bool CastFootRays(float footY, float x, out RaycastHit2D hit)
+        {
+            for (int i = 0; i < FootRayOffsets.Length; i++)
+            {
+                hit = Physics2D.Raycast(
+                    new Vector2(x + FootRayOffsets[i], footY),
+                    Vector2.down,
+                    FootRayDistance,
+                    groundLayer);
+                if (hit.collider != null)
+                    return true;
+            }
+
+            hit = default;
+            return false;
         }
     }
 }

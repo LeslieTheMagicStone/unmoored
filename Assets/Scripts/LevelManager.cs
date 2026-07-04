@@ -10,6 +10,7 @@ namespace CGJ2026
         [SerializeField] Transform playerB;
         [SerializeField] Transform winZone;
         [SerializeField] PlayerConfig config;
+        [SerializeField] KeyCode respawnKey = KeyCode.R;
 
         Vector3 checkpoint;
         int lives;
@@ -51,6 +52,12 @@ namespace CGJ2026
         void OnDisable()
         {
             EventBus.Off(E.PlayerFell, OnPlayerFell);
+        }
+
+        void Update()
+        {
+            if (Input.GetKeyDown(respawnKey))
+                RespawnPlayers();
         }
 
         public void SetCheckpoint(Vector3 position)

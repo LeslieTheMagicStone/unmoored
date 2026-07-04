@@ -22,6 +22,8 @@ namespace CGJ2026
         [SerializeField] float swingReactiveForce = 8f;
         [SerializeField] int maxLives = 3;
         [SerializeField] float respawnHeightOffset = 2f;
+        [SerializeField] float groundFriction = 1f;
+        [SerializeField] float groundBounciness = 0f;
 
         public float MoveSpeed => moveSpeed;
         public float JumpForce => jumpForce;
@@ -40,5 +42,7 @@ namespace CGJ2026
         public float SwingReactiveForce => swingReactiveForce;
         public int MaxLives => maxLives;
         public float RespawnHeightOffset => respawnHeightOffset;
+        public float GroundFriction => groundFriction;
+        public float GroundBounciness => groundBounciness;
     }
 }
