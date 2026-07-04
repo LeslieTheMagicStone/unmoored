@@ -91,8 +91,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82fd49be7f97148328a619f57859d742, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  holdDuration: 2
-  respawnDelay: 3
+  holdDuration: 2.5
+  respawnDelay: 6
   oneShot: 0
   visualTransform: {fileID: 8220215826470064503}
 --- !u!1 &5464031754758514226
