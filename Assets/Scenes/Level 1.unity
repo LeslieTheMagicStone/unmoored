@@ -2182,7 +2182,7 @@ Transform:
   m_GameObject: {fileID: 696847676}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 143.19, y: 22.7, z: 0}
+  m_LocalPosition: {x: 142.84, y: 23.25, z: 0}
   m_LocalScale: {x: 0.6, y: 1.044, z: 1.2}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -2272,7 +2272,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2113603844}
+  - {fileID: 1897913432}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2294,8 +2294,8 @@ LineRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_Positions:
-  - {x: 144.59, y: 21.23, z: 0}
-  - {x: 149.59, y: 21.23, z: 0}
+  - {x: 144.59, y: 28.99, z: 0}
+  - {x: 149.59, y: 28.99, z: 0}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 1
@@ -2391,7 +2391,7 @@ Transform:
   m_GameObject: {fileID: 714007402}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 144.59, y: 21.23, z: 0}
+  m_LocalPosition: {x: 144.59, y: 28.99, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3153,8 +3153,8 @@ Transform:
   m_GameObject: {fileID: 895022344}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 60.63, y: 10.400001, z: 0}
-  m_LocalScale: {x: 13.056579, y: 3, z: 1}
+  m_LocalPosition: {x: 60.63, y: 11.5, z: 0}
+  m_LocalScale: {x: 14.8845, y: 3.72, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1686352163}
@@ -5998,6 +5998,46 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: dc615fd0e5b2e40928dca4bafb98f479, type: 3}
+--- !u!21 &1897913432
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Sprites/Default
+  m_Shader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _AlphaTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - PixelSnap: 0
+    - _EnableExternalAlpha: 0
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Flip: {r: 1, g: 1, b: 1, a: 1}
+    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
 --- !u!4 &1946071314 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8712388496407059907, guid: 7571a5537c2a2402dab2e5c266604391,
@@ -6545,46 +6585,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1107468155}
   m_PrefabAsset: {fileID: 0}
---- !u!21 &2113603844
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Sprites/Default
-  m_Shader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _AlphaTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - PixelSnap: 0
-    - _EnableExternalAlpha: 0
-    m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Flip: {r: 1, g: 1, b: 1, a: 1}
-    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
-  m_BuildTextureStacks: []
 --- !u!4 &2114948255 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8712388496407059907, guid: 7571a5537c2a2402dab2e5c266604391,
