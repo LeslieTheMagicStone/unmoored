@@ -24,6 +24,7 @@ namespace CGJ2026
         [SerializeField] LayerMask groundLayer;
         [SerializeField] LayerMask anchorLayer;
         [SerializeField] float anchorProbeReach = 1.15f;
+        [SerializeField] float anchorUpReachMultiplier = 1.5f;
 
         CharacterForm form = CharacterForm.Human;
         Rigidbody2D rb;
@@ -202,7 +203,8 @@ namespace CGJ2026
             Bounds b = col.bounds;
             Vector2 center = b.center;
             float halfH = b.extents.y;
-            float reach = (b.extents.x + halfH) * anchorProbeReach;
+            float baseReach = (b.extents.x + halfH) * anchorProbeReach;
+            float upReach = baseReach * anchorUpReachMultiplier;
 
             Vector2[] directions = { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
             Vector2 bestPoint = Vector2.zero;
@@ -213,6 +215,7 @@ namespace CGJ2026
             for (int i = 0; i < 4; i++)
             {
                 Vector2 dir = directions[i];
+                float reach = dir == Vector2.up ? upReach : baseReach;
                 int n = Physics2D.RaycastNonAlloc(center, dir, anchorSnapHits, reach, anchorLayer);
                 for (int j = 0; j < n; j++)
                 {
