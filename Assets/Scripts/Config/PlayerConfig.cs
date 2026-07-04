@@ -20,6 +20,7 @@ namespace CGJ2026
         [SerializeField] float anchorVerticalTolerance = 0.4f;
         [SerializeField] float swingForce = 12f;
         [SerializeField] float swingReactiveForce = 8f;
+        [SerializeField] float wallJumpHorizontalForce = 8f;
         [SerializeField] int maxLives = 3;
         [SerializeField] float respawnHeightOffset = 2f;
         [SerializeField] float groundFriction = 1f;
@@ -41,6 +42,7 @@ namespace CGJ2026
         public float AnchorMass => anchorMass;
         public float SwingForce => swingForce;
         public float SwingReactiveForce => swingReactiveForce;
+        public float WallJumpHorizontalForce => wallJumpHorizontalForce;
         public int MaxLives => maxLives;
         public float RespawnHeightOffset => respawnHeightOffset;
         public float GroundFriction => groundFriction;

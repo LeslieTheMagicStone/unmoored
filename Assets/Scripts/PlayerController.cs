@@ -42,6 +42,7 @@ namespace CGJ2026
         static readonly float[] FootRayOffsets = { 0f, -0.5f, 0.5f, -1.0f, 1.0f };
         const float FootRayDistance = 0.08f;
         const float LedgeHorizontalReach = 0.25f;
+        const float WallRayReach = 0.12f;
 
         public CharacterForm Form => form;
         public bool IsAnchored => form == CharacterForm.Anchor;
@@ -149,6 +150,8 @@ namespace CGJ2026
             else if (jumpPressed)
             {
                 jumpPressed = false;
+                if (!isGrounded)
+                    TryWallJump();
             }
 
             wasGrounded = isGrounded;
@@ -295,6 +298,45 @@ namespace CGJ2026
 
             hit = default;
             return false;
+        }
+
+        int CheckWall()
+        {
+            Bounds b = col.bounds;
+            float h = b.size.y * 0.7f;
+            float topY = b.max.y - 0.05f;
+            float botY = b.min.y + 0.05f;
+            float sideX = b.center.x;
+
+            for (int dir = -1; dir <= 1; dir += 2)
+            {
+                Vector2 origin = new Vector2(sideX + dir * (b.extents.x + 0.02f), topY);
+                var hit = Physics2D.Raycast(origin, Vector2.right * dir, WallRayReach, groundLayer);
+                if (hit.collider != null) return dir;
+
+                origin.y = b.center.y;
+                hit = Physics2D.Raycast(origin, Vector2.right * dir, WallRayReach, groundLayer);
+                if (hit.collider != null) return dir;
+
+                origin.y = botY;
+                hit = Physics2D.Raycast(origin, Vector2.right * dir, WallRayReach, groundLayer);
+                if (hit.collider != null) return dir;
+            }
+
+            return 0;
+        }
+
+        void TryWallJump()
+        {
+            int wallDir = CheckWall();
+            if (wallDir == 0) return;
+
+            float vx = -wallDir * config.WallJumpHorizontalForce;
+            float vy = config.JumpForce;
+            rb.velocity = new Vector2(rb.velocity.x, 0f);
+            rb.AddForce(new Vector2(vx, vy), ForceMode2D.Impulse);
+            justJumped = true;
+            AudioManager.Instance?.PlayJump();
         }
 
         void TryLedgeAssist()
