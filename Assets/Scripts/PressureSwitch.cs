@@ -6,6 +6,7 @@ namespace CGJ2026
     public class PressureSwitch : MonoBehaviour
     {
         [SerializeField] Gate targetGate;
+        [SerializeField] Elevator targetElevator;
         [SerializeField] Sprite offSprite;
         [SerializeField] Sprite onSprite;
 
@@ -30,6 +31,7 @@ namespace CGJ2026
             if (bodiesOnSwitch == 1)
                 SwapSprite(onSprite);
             targetGate?.Open();
+            targetElevator?.Open();
         }
 
         void OnTriggerExit2D(Collider2D other)
@@ -40,6 +42,7 @@ namespace CGJ2026
             {
                 SwapSprite(offSprite);
                 targetGate?.Close();
+                targetElevator?.Close();
             }
         }
 
