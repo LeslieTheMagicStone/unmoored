@@ -75,7 +75,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: d91bb04e81c5d4a7da0173d7b37d0fef, type: 3}
+  m_Sprite: {fileID: 21300000, guid: b0f77185af71e4088a80d7ee3edcdabd, type: 3}
   m_Color: {r: 1, g: 0.9910574, b: 0.9669811, a: 0.65882355}
   m_FlipX: 0
   m_FlipY: 0
@@ -122,7 +122,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 19.6, y: 14.4}
+    oldSize: {x: 44.18, y: 32.401543}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -143,6 +143,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed9339262696947d0a165752fe572ae1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inactiveSprite: {fileID: 21300000, guid: d91bb04e81c5d4a7da0173d7b37d0fef, type: 3}
+  inactiveSprite: {fileID: 21300000, guid: b0f77185af71e4088a80d7ee3edcdabd, type: 3}
   activatedSprite: {fileID: 21300000, guid: d91bb04e81c5d4a7da0173d7b37d0fef, type: 3}
   respawnHeightOffset: 2
