@@ -5,8 +5,8 @@ namespace CGJ2026
     [RequireComponent(typeof(Collider2D))]
     public class Checkpoint : MonoBehaviour
     {
-        [SerializeField] Color inactiveColor = new(0.4f, 0.4f, 0.4f, 0.5f);
-        [SerializeField] Color activatedColor = new(0.2f, 0.8f, 0.3f, 0.8f);
+        [SerializeField] Sprite inactiveSprite;
+        [SerializeField] Sprite activatedSprite;
         [SerializeField] float respawnHeightOffset = 2f;
 
         SpriteRenderer spriteRenderer;
@@ -20,7 +20,7 @@ namespace CGJ2026
 
             spriteRenderer = GetComponent<SpriteRenderer>();
             if (spriteRenderer != null)
-                spriteRenderer.color = inactiveColor;
+                spriteRenderer.sprite = inactiveSprite;
         }
 
         void OnTriggerEnter2D(Collider2D other)
@@ -34,7 +34,7 @@ namespace CGJ2026
             {
                 activated = true;
                 if (spriteRenderer != null)
-                    spriteRenderer.color = activatedColor;
+                    spriteRenderer.sprite = activatedSprite;
 
                 Juice.CheckpointBurst(transform.position);
 
