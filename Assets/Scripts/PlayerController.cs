@@ -294,6 +294,9 @@ namespace CGJ2026
 
         void TryLedgeAssist()
         {
+            bool isSwinging = ropeSystem != null && ropeSystem.IsTaut() && form == CharacterForm.Human && !isGrounded;
+            if (!isSwinging) return;
+
             Bounds b = col.bounds;
             float dir = Mathf.Sign(moveInput);
             float extX = b.extents.x;
