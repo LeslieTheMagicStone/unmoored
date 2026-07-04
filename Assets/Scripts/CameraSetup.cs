@@ -14,7 +14,8 @@ namespace CGJ2026
         static Vector3 smoothPos;
         static Vector3 shakeOffset;
         Vector3 velocity;
-        float defaultSize;
+        float currentSize;
+        float sizeVelocity;
 
         public static Vector2? FocusOverride { get; set; }
         public static float? SizeOverride { get; set; }
@@ -36,7 +37,7 @@ namespace CGJ2026
             cam = Camera.main;
             if (cam != null)
             {
-                defaultSize = cam.orthographicSize;
+                currentSize = orthoSize;
                 cam.orthographicSize = orthoSize;
                 smoothPos = cam.transform.position;
             }
@@ -46,7 +47,9 @@ namespace CGJ2026
         {
             if (cam == null) return;
 
-            cam.orthographicSize = SizeOverride ?? orthoSize;
+            float targetSize = SizeOverride ?? orthoSize;
+            currentSize = Mathf.SmoothDamp(currentSize, targetSize, ref sizeVelocity, smoothTime);
+            cam.orthographicSize = currentSize;
 
             Vector3 target;
             if (FocusOverride.HasValue)
