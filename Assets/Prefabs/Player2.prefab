@@ -183,6 +183,9 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
+  anchorLayer:
+    serializedVersion: 2
+    m_Bits: 768
   anchorProbeReach: 1
 --- !u!114 &7479411913057150271
 MonoBehaviour:

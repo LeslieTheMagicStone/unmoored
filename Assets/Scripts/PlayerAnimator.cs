@@ -33,7 +33,7 @@ namespace CGJ2026
             Sprite result;
             if (controller.Form == CharacterForm.Anchor)
             {
-                bool anchoredAbove = controller.SnapNormal.y < -0.5f;
+                bool anchoredAbove = controller.SnappedToAnchorPoint || controller.SnapNormal.y < -0.5f;
                 result = anchoredAbove && anchorUpSprite != null ? anchorUpSprite : anchorSprite;
             }
             else if (!isGrounded && jumpSprites.Length >= 3)

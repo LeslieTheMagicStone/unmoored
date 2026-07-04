@@ -22,6 +22,7 @@ namespace CGJ2026
 
         [Header("Physics")]
         [SerializeField] LayerMask groundLayer;
+        [SerializeField] LayerMask anchorLayer;
         [SerializeField] float anchorProbeReach = 1.15f;
 
         CharacterForm form = CharacterForm.Human;
@@ -35,6 +36,7 @@ namespace CGJ2026
         float coyoteTimer;
         bool justJumped;
         Vector2 snapNormal;
+        bool snappedToAnchorPoint;
         RopeSystem ropeSystem;
         readonly RaycastHit2D[] anchorSnapHits = new RaycastHit2D[8];
         static readonly float[] FootRayOffsets = { 0f, -0.5f, 0.5f, -0.75f, 0.75f };
@@ -51,6 +53,7 @@ namespace CGJ2026
         public Rigidbody2D Body => rb;
         public float MoveInput => moveInput;
         public Vector2 SnapNormal => snapNormal;
+        public bool SnappedToAnchorPoint => snappedToAnchorPoint;
 
         void Awake()
         {
@@ -199,12 +202,13 @@ namespace CGJ2026
             Vector2[] directions = { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
             Vector2 bestPoint = Vector2.zero;
             Vector2 bestNormal = Vector2.zero;
+            Collider2D bestCollider = null;
             float bestDist = float.MaxValue;
 
             for (int i = 0; i < 4; i++)
             {
                 Vector2 dir = directions[i];
-                int n = Physics2D.RaycastNonAlloc(center, dir, anchorSnapHits, reach, groundLayer);
+                int n = Physics2D.RaycastNonAlloc(center, dir, anchorSnapHits, reach, anchorLayer);
                 for (int j = 0; j < n; j++)
                 {
                     float d = anchorSnapHits[j].distance;
@@ -215,6 +219,7 @@ namespace CGJ2026
                         Vector2 normal = anchorSnapHits[j].normal;
                         bestPoint = surfacePoint + normal * halfH * 1.15f;
                         bestNormal = normal;
+                        bestCollider = anchorSnapHits[j].collider;
                     }
                 }
             }
@@ -222,6 +227,7 @@ namespace CGJ2026
             if (bestDist >= float.MaxValue) return;
 
             snapNormal = bestNormal;
+            snappedToAnchorPoint = bestCollider != null && bestCollider.GetComponent<AnchorPoint>() != null;
             rb.position = bestPoint;
             rb.velocity = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Kinematic;
@@ -243,6 +249,7 @@ namespace CGJ2026
             rb.drag = config.HumanDrag;
             rb.gravityScale = config.GravityScale;
             snapNormal = Vector2.zero;
+            snappedToAnchorPoint = false;
             if (wasAnchored)
                 EventBus.Emit(E.PlayerReleased, this);
         }
