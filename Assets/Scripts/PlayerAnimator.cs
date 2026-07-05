@@ -9,7 +9,8 @@ namespace CGJ2026
         [SerializeField] Sprite[] walkSprites;
         [SerializeField] Sprite[] jumpSprites;
         [SerializeField] Sprite anchorSprite;    // down (standing)
-        [SerializeField] Sprite anchorUpSprite;  // up / left / right (flipX for right)
+        [SerializeField] Sprite anchorUpSprite;  // left / right wall (flipX for right)
+        [SerializeField] Sprite[] anchorHangSprites; // ceiling hang ping-pong
         [SerializeField] float fps = 12f;
 
         SpriteRenderer spriteRenderer;
@@ -17,6 +18,9 @@ namespace CGJ2026
         float takeoffTimer;
         int walkFrame;
         int takeoffFrame;
+        float hangTimer;
+        int hangFrame;
+        int hangDir = 1;
 
         void Awake()
         {
@@ -34,19 +38,58 @@ namespace CGJ2026
             if (controller.Form == CharacterForm.Anchor)
             {
                 Vector2 n = controller.SnapNormal;
-                if (n.y < -0.5f)
+                if (n.y < -0.5f && anchorHangSprites.Length >= 2)
+                {
+                    hangTimer += Time.deltaTime;
+                    if (hangTimer >= 1f / fps)
+                    {
+                        hangTimer -= 1f / fps;
+                        hangFrame += hangDir;
+                        if (hangFrame >= anchorHangSprites.Length - 1 || hangFrame <= 0)
+                            hangDir = -hangDir;
+                    }
+                    result = anchorHangSprites[hangFrame];
+                }
+                else if (n.y < -0.5f)
+                {
                     result = anchorUpSprite != null ? anchorUpSprite : anchorSprite;
+                    hangFrame = 0;
+                    hangDir = 1;
+                    hangTimer = 0f;
+                }
                 else if (n.x < -0.5f)
+                {
                     result = anchorUpSprite != null ? anchorUpSprite : anchorSprite;
+                    hangFrame = 0;
+                    hangDir = 1;
+                    hangTimer = 0f;
+                }
                 else if (n.x > 0.5f)
                 {
                     result = anchorUpSprite != null ? anchorUpSprite : anchorSprite;
                     flip = true;
+                    hangFrame = 0;
+                    hangDir = 1;
+                    hangTimer = 0f;
                 }
                 else
+                {
                     result = anchorSprite;
+                    hangFrame = 0;
+                    hangDir = 1;
+                    hangTimer = 0f;
+                }
+
+                spriteRenderer.sprite = result;
+                spriteRenderer.flipX = flip;
+                return;
             }
-            else if (!isGrounded && jumpSprites.Length >= 3)
+
+            hangFrame = 0;
+            hangDir = 1;
+            hangTimer = 0f;
+
+            if (!isGrounded && jumpSprites.Length >= 3)
             {
                 if (controller.JustJumped && takeoffFrame < 2)
                 {
