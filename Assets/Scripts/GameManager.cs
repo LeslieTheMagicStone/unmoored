@@ -17,9 +17,21 @@ namespace CGJ2026
         CanvasGroup overlay;
         int currentLevel;
 
+        float elapsedTime;
+        bool timing;
+
         public int CurrentLevel => currentLevel;
         public int LevelCount => levelScenes.Length;
         public static bool IsGameClear { get; private set; }
+        public static float ElapsedTime { get; private set; }
+
+        public static string FormatTime(float t)
+        {
+            int m = (int)(t / 60);
+            int s = (int)(t % 60);
+            int ms = (int)((t * 100) % 100);
+            return $"{m:D2}:{s:D2}:{ms:D2}";
+        }
 
         void Awake()
         {
@@ -37,6 +49,12 @@ namespace CGJ2026
         void Start()
         {
             StartCoroutine(FadeFromBlack());
+        }
+
+        void Update()
+        {
+            if (timing)
+                elapsedTime += Time.deltaTime;
         }
 
         IEnumerator FadeFromBlack()
@@ -89,6 +107,8 @@ namespace CGJ2026
             }
             else
             {
+                timing = false;
+                ElapsedTime = elapsedTime;
                 IsGameClear = true;
                 StartCoroutine(Transition(gameOverScene));
             }
@@ -96,6 +116,8 @@ namespace CGJ2026
 
         void OnGameOver(object _)
         {
+            timing = false;
+            ElapsedTime = elapsedTime;
             IsGameClear = false;
             StartCoroutine(Transition(gameOverScene));
         }
@@ -109,6 +131,9 @@ namespace CGJ2026
         public void LoadGame()
         {
             IsGameClear = false;
+            elapsedTime = 0f;
+            ElapsedTime = 0f;
+            timing = true;
             currentLevel = 0;
             StartCoroutine(Transition(levelScenes[0]));
         }
