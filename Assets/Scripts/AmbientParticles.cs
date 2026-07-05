@@ -49,7 +49,7 @@ namespace CGJ2026
 			Destroy(d.GetComponent<Collider>());
 
 			var sr = d.GetComponent<MeshRenderer>();
-			sr.material = new Material(Shader.Find("Unlit/Color"));
+			sr.material = new Material(Shader.Find("Sprites/Default"));
 			sr.material.color = new Color(0.85f, 0.9f, 1f, 0.4f);
 			sr.material.DOFade(0f, particleLifetime);
 
