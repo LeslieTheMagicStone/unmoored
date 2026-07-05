@@ -22,6 +22,12 @@ namespace CGJ2026
         public PlayerController PlayerB => playerB;
         public float MaxLength { get; private set; }
 
+        public void SetVisible(bool visible)
+        {
+            if (lineRenderer != null)
+                lineRenderer.enabled = visible;
+        }
+
         void Awake()
         {
             lineRenderer = GetComponent<LineRenderer>();

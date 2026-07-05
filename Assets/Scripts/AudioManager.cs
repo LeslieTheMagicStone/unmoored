@@ -159,6 +159,7 @@ namespace CGJ2026
         public void PlayPause() => oneShotSource.PlayOneShot(pauseClip);
         public void PlayUIClick() => oneShotSource.PlayOneShot(uiClickClip);
         public void PlayUIHover() => oneShotSource.PlayOneShot(uiHoverClip);
+        public void PlayDeathSound() => oneShotSource.PlayOneShot(deathClip);
         public void PlayRespawn() => oneShotSource.PlayOneShot(respawnClip);
 
         void OnAnchor(object _)

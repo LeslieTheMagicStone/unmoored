@@ -117,6 +117,8 @@ namespace CGJ2026
             var rbB = playerB != null ? playerB.GetComponent<Rigidbody2D>() : null;
 
             // Freeze players at death position
+            var rope = FindObjectOfType<RopeSystem>();
+            if (rope != null) rope.SetVisible(false);
             if (pcA != null) pcA.enabled = false;
             if (pcB != null) pcB.enabled = false;
             if (rbA != null) { rbA.velocity = Vector2.zero; rbA.bodyType = RigidbodyType2D.Kinematic; }
@@ -127,6 +129,8 @@ namespace CGJ2026
 
             // Scale down at death point
             float shrinkDuration = respawnAnimDuration * 0.25f;
+            var am = AudioManager.Instance;
+            if (am != null) am.PlayDeathSound();
             if (playerA != null) playerA.DOScale(Vector3.zero, shrinkDuration).SetUpdate(true);
             if (playerB != null) playerB.DOScale(Vector3.zero, shrinkDuration).SetUpdate(true);
             yield return new WaitForSecondsRealtime(shrinkDuration);
@@ -135,9 +139,6 @@ namespace CGJ2026
             Vector3 respawnPos = checkpoint + Vector3.up * config.RespawnHeightOffset;
             if (playerA != null) playerA.position = respawnPos;
             if (playerB != null) playerB.position = respawnPos + Vector3.right * 0.5f;
-
-            var am = AudioManager.Instance;
-            if (am != null) am.PlayRespawn();
 
             if (pcA != null) pcA.ResetToHuman();
             if (pcB != null) pcB.ResetToHuman();
@@ -149,12 +150,18 @@ namespace CGJ2026
             if (rbA != null) rbA.bodyType = RigidbodyType2D.Dynamic;
             if (rbB != null) rbB.bodyType = RigidbodyType2D.Dynamic;
 
+            yield return new WaitForSecondsRealtime(0.5f);
+
+            if (am != null) am.PlayRespawn();
+
             // Scale back up with overshoot bounce
             float growDuration = respawnAnimDuration * 0.75f;
-            if (playerA != null) playerA.DOScale(scaleA, growDuration).SetEase(Ease.OutBack).SetUpdate(true);
-            if (playerB != null) playerB.DOScale(scaleB, growDuration).SetEase(Ease.OutBack).SetUpdate(true);
+            if (playerA != null) playerA.DOScale(scaleA, growDuration).SetEase(Ease.OutBack, 2.5f).SetUpdate(true);
+            if (playerB != null) playerB.DOScale(scaleB, growDuration).SetEase(Ease.OutBack, 2.5f).SetUpdate(true);
             yield return new WaitForSecondsRealtime(growDuration);
 
+            rope = FindObjectOfType<RopeSystem>();
+            if (rope != null) rope.SetVisible(true);
             if (pcA != null) pcA.enabled = true;
             if (pcB != null) pcB.enabled = true;
 
