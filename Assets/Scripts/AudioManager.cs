@@ -23,7 +23,7 @@ namespace CGJ2026
         [SerializeField] AudioClip gateOpenClip;
         [SerializeField] AudioClip gateCloseClip;
         [SerializeField] AudioClip stompClip;
-
+        [SerializeField] AudioClip[] bounceClips;
 
         [Header("UI / Events")]
         [SerializeField] AudioClip deathClip;
@@ -163,6 +163,13 @@ namespace CGJ2026
 
         public void PlayCrumble() => oneShotSource.PlayOneShot(crumbleClip);
         public void PlayStomp() => oneShotSource.PlayOneShot(stompClip);
+        public void PlayBounce()
+        {
+            if (bounceClips == null || bounceClips.Length == 0) return;
+            var clip = bounceClips[Random.Range(0, bounceClips.Length)];
+            oneShotSource.pitch = Random.Range(0.9f, 1.1f);
+            oneShotSource.PlayOneShot(clip);
+        }
         public void StartGateOpenLoop() { loopSource.clip = gateOpenClip; loopSource.Play(); }
         public void StartGateCloseLoop() { loopSource.clip = gateCloseClip; loopSource.Play(); }
         public void StopGateLoop() => loopSource.Stop();

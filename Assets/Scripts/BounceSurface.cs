@@ -33,6 +33,7 @@ namespace CGJ2026
             if (Time.time - t < cooldown) return;
 
             lastBounce[pc] = Time.time;
+            AudioManager.Instance?.PlayBounce();
 
             var rb = pc.Body;
             rb.velocity = new Vector2(rb.velocity.x, 0f);
