@@ -152,7 +152,8 @@ namespace CGJ2026
             yield return new WaitForSecondsRealtime(0.35f);
 
             SceneManager.LoadScene(sceneName);
-            yield return new WaitForEndOfFrame();
+            yield return null;
+            yield return null;
 
             overlay.DOFade(0f, 0.8f).SetUpdate(true);
         }
