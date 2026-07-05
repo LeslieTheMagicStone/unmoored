@@ -20,15 +20,22 @@ namespace CGJ2026
         {
             closing = false;
             scaleTween?.Kill();
-            scaleTween = transform.DOScaleY(0f, duration).SetEase(Ease.OutQuad);
+            AudioManager.Instance?.StartGateOpenLoop();
+            scaleTween = transform.DOScaleY(0f, duration).SetEase(Ease.OutQuad)
+                .OnComplete(() => AudioManager.Instance?.StopGateLoop());
         }
 
         public void Close()
         {
             closing = true;
             scaleTween?.Kill();
+            AudioManager.Instance?.StartGateCloseLoop();
             scaleTween = transform.DOScaleY(closedScale.y, duration).SetEase(Ease.InQuad)
-                .OnComplete(() => closing = false);
+                .OnComplete(() =>
+                {
+                    closing = false;
+                    AudioManager.Instance?.StopGateLoop();
+                });
         }
 
         void OnCollisionStay2D(Collision2D collision)

@@ -20,7 +20,10 @@ namespace CGJ2026
 
         [Header("Environment")]
         [SerializeField] AudioClip crumbleClip;
+        [SerializeField] AudioClip gateOpenClip;
+        [SerializeField] AudioClip gateCloseClip;
         [SerializeField] AudioClip stompClip;
+
 
         [Header("UI / Events")]
         [SerializeField] AudioClip deathClip;
@@ -36,6 +39,7 @@ namespace CGJ2026
 
         AudioSource source;
         AudioSource oneShotSource;
+        AudioSource loopSource;
         AudioSource musicSource;
         AudioLowPassFilter musicLowPass;
         int walkIndex;
@@ -64,6 +68,11 @@ namespace CGJ2026
             oneShotSource = gameObject.AddComponent<AudioSource>();
             oneShotSource.playOnAwake = false;
             oneShotSource.spatialBlend = 0f;
+
+            loopSource = gameObject.AddComponent<AudioSource>();
+            loopSource.playOnAwake = false;
+            loopSource.spatialBlend = 0f;
+            loopSource.loop = true;
 
             var musicGo = new GameObject("MusicSource");
             musicGo.transform.SetParent(transform);
@@ -154,6 +163,9 @@ namespace CGJ2026
 
         public void PlayCrumble() => oneShotSource.PlayOneShot(crumbleClip);
         public void PlayStomp() => oneShotSource.PlayOneShot(stompClip);
+        public void StartGateOpenLoop() { loopSource.clip = gateOpenClip; loopSource.Play(); }
+        public void StartGateCloseLoop() { loopSource.clip = gateCloseClip; loopSource.Play(); }
+        public void StopGateLoop() => loopSource.Stop();
         public void PlayRopeTaut() => oneShotSource.PlayOneShot(ropeTautClip);
         public void PlayAnchorSnap() => oneShotSource.PlayOneShot(anchorSnapClip);
         public void PlayPause() => oneShotSource.PlayOneShot(pauseClip);
