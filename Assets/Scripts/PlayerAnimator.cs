@@ -37,7 +37,8 @@ namespace CGJ2026
             if (controller.Form == CharacterForm.Anchor)
             {
                 Vector2 n = controller.SnapNormal;
-                if (n.y < -0.5f && anchorHangSprites.Length >= 2)
+                bool isHang = n.y < -0.5f || Mathf.Abs(n.x) > 0.5f;
+                if (isHang && anchorHangSprites.Length >= 2)
                 {
                     int nSprites = anchorHangSprites.Length;
                     int cycleLen = 2 * nSprites;
@@ -51,22 +52,9 @@ namespace CGJ2026
                     int frame = hangStep < nSprites ? hangStep : cycleLen - 1 - hangStep;
                     result = anchorHangSprites[frame];
                 }
-                else if (n.y < -0.5f)
+                else if (isHang)
                 {
                     result = anchorUpSprite != null ? anchorUpSprite : anchorSprite;
-                    hangStep = 0;
-                    hangTimer = 0f;
-                }
-                else if (n.x < -0.5f)
-                {
-                    result = anchorUpSprite != null ? anchorUpSprite : anchorSprite;
-                    hangStep = 0;
-                    hangTimer = 0f;
-                }
-                else if (n.x > 0.5f)
-                {
-                    result = anchorUpSprite != null ? anchorUpSprite : anchorSprite;
-                    flip = true;
                     hangStep = 0;
                     hangTimer = 0f;
                 }
@@ -76,6 +64,9 @@ namespace CGJ2026
                     hangStep = 0;
                     hangTimer = 0f;
                 }
+
+                if (n.x > 0.5f)
+                    flip = true;
 
                 spriteRenderer.sprite = result;
                 spriteRenderer.flipX = flip;
