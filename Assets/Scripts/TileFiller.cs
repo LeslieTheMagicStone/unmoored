@@ -2,23 +2,37 @@ using UnityEngine;
 
 namespace CGJ2026
 {
+	public enum TileFillMode
+	{
+		SingleRow,
+		RandomFill
+	}
+
 	[ExecuteAlways]
 	public class TileFiller : MonoBehaviour
 	{
-		[Header("Sprites")]
+		[Header("Mode")]
+		[SerializeField] TileFillMode mode;
+
+		[Header("Single Row Sprites")]
 		[SerializeField] Sprite leftEdge;
 		[SerializeField] Sprite rightEdge;
 		[SerializeField] Sprite middleA;
 		[SerializeField] Sprite middleB;
 
+		[Header("Random Fill")]
+		[SerializeField] Sprite[] palette;
+
 		[Header("Settings")]
 		[SerializeField] Color tileColor = Color.white;
 
 		Vector3 lastScale;
+		TileFillMode lastMode;
 		Sprite lastLeftEdge;
 		Sprite lastRightEdge;
 		Sprite lastMiddleA;
 		Sprite lastMiddleB;
+		Sprite[] lastPalette;
 		Transform tilesRoot;
 
 		void OnEnable()
@@ -28,29 +42,54 @@ namespace CGJ2026
 
 		void Update()
 		{
-			if (transform.localScale != lastScale || SpritesChanged())
+			if (transform.localScale != lastScale || mode != lastMode || SpritesChanged())
 				Rebuild();
 		}
 
 		bool SpritesChanged()
 		{
-			return leftEdge != lastLeftEdge || rightEdge != lastRightEdge
-				|| middleA != lastMiddleA || middleB != lastMiddleB;
+			if (mode == TileFillMode.SingleRow)
+				return leftEdge != lastLeftEdge || rightEdge != lastRightEdge
+					|| middleA != lastMiddleA || middleB != lastMiddleB;
+
+			return !ArraysEqual(palette, lastPalette);
+		}
+
+		static bool ArraysEqual(Sprite[] a, Sprite[] b)
+		{
+			if (a == null || b == null) return a == b;
+			if (a.Length != b.Length) return false;
+			for (int i = 0; i < a.Length; i++)
+				if (a[i] != b[i]) return false;
+			return true;
 		}
 
 		public void Rebuild()
 		{
 			Clear();
 
-			if (leftEdge == null || rightEdge == null || middleA == null || middleB == null) return;
-
 			Vector3 s = transform.localScale;
 			if (s.x <= 0f || s.y <= 0f) return;
 
-			int cols = SnapToEven(s.x);
-			int rows = Mathf.Max(1, Mathf.RoundToInt(s.y));
+			int cols, rows;
+			float ppu;
 
-			float ppu = leftEdge.pixelsPerUnit;
+			if (mode == TileFillMode.RandomFill)
+			{
+				if (palette == null || palette.Length == 0) return;
+
+				cols = Mathf.Max(1, Mathf.RoundToInt(s.x));
+				rows = Mathf.Max(1, Mathf.RoundToInt(s.y));
+				ppu = palette[0].pixelsPerUnit;
+			}
+			else
+			{
+				if (leftEdge == null || rightEdge == null || middleA == null || middleB == null) return;
+
+				cols = SnapToEven(s.x);
+				rows = 1;
+				ppu = leftEdge.pixelsPerUnit;
+			}
 
 			tilesRoot = new GameObject("Tiles").transform;
 			tilesRoot.SetParent(transform);
@@ -60,8 +99,6 @@ namespace CGJ2026
 
 			for (int x = 0; x < cols; x++)
 			{
-				Sprite sprite = PickSprite(x, cols);
-
 				for (int y = 0; y < rows; y++)
 				{
 					float px = (x + 0.5f) / cols;
@@ -76,16 +113,18 @@ namespace CGJ2026
 					go.transform.localScale = new Vector3(1f / cols + overlapX, 1f / rows + overlapY, 1f);
 
 					var sr = go.AddComponent<SpriteRenderer>();
-					sr.sprite = sprite;
+					sr.sprite = PickSprite(x, cols);
 					sr.color = tileColor;
 				}
 			}
 
 			lastScale = s;
+			lastMode = mode;
 			lastLeftEdge = leftEdge;
 			lastRightEdge = rightEdge;
 			lastMiddleA = middleA;
 			lastMiddleB = middleB;
+			lastPalette = palette != null ? (Sprite[])palette.Clone() : null;
 		}
 
 		static int SnapToEven(float v)
@@ -96,6 +135,9 @@ namespace CGJ2026
 
 		Sprite PickSprite(int x, int totalCols)
 		{
+			if (mode == TileFillMode.RandomFill)
+				return palette[Random.Range(0, palette.Length)];
+
 			if (x == 0) return leftEdge;
 			if (x == totalCols - 1) return rightEdge;
 
