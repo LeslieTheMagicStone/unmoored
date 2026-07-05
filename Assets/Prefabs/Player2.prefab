@@ -179,7 +179,6 @@ MonoBehaviour:
   moveRightKey: 275
   jumpKey: 273
   anchorKey: 274
-  reelKey: 304
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
@@ -214,6 +213,10 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 2ec770346ea904707985bed8cfc0fdc4, type: 3}
   anchorSprite: {fileID: 21300000, guid: 2341960b99b7e4e2fb9d8e90ee90943b, type: 3}
   anchorUpSprite: {fileID: 21300000, guid: d835a4dc87bbc4a9b9ccbe35d40b9cb4, type: 3}
+  anchorHangSprites:
+  - {fileID: 21300000, guid: d835a4dc87bbc4a9b9ccbe35d40b9cb4, type: 3}
+  - {fileID: 21300000, guid: 5dec9529c5bfe4c78a9c5bcc2a48021b, type: 3}
+  - {fileID: 21300000, guid: a999437459a714bbe8d4ed2cb84968eb, type: 3}
   fps: 12
 --- !u!58 &8421147875430115259
 CircleCollider2D:

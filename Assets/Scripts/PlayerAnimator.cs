@@ -19,8 +19,7 @@ namespace CGJ2026
         int walkFrame;
         int takeoffFrame;
         float hangTimer;
-        int hangFrame;
-        int hangDir = 1;
+        int hangStep;
 
         void Awake()
         {
@@ -40,43 +39,41 @@ namespace CGJ2026
                 Vector2 n = controller.SnapNormal;
                 if (n.y < -0.5f && anchorHangSprites.Length >= 2)
                 {
+                    int nSprites = anchorHangSprites.Length;
+                    int cycleLen = 2 * nSprites;
+                    float hangFps = fps * 0.5f;
                     hangTimer += Time.deltaTime;
-                    if (hangTimer >= 1f / fps)
+                    if (hangTimer >= 1f / hangFps)
                     {
-                        hangTimer -= 1f / fps;
-                        hangFrame += hangDir;
-                        if (hangFrame >= anchorHangSprites.Length - 1 || hangFrame <= 0)
-                            hangDir = -hangDir;
+                        hangTimer -= 1f / hangFps;
+                        hangStep = (hangStep + 1) % cycleLen;
                     }
-                    result = anchorHangSprites[hangFrame];
+                    int frame = hangStep < nSprites ? hangStep : cycleLen - 1 - hangStep;
+                    result = anchorHangSprites[frame];
                 }
                 else if (n.y < -0.5f)
                 {
                     result = anchorUpSprite != null ? anchorUpSprite : anchorSprite;
-                    hangFrame = 0;
-                    hangDir = 1;
+                    hangStep = 0;
                     hangTimer = 0f;
                 }
                 else if (n.x < -0.5f)
                 {
                     result = anchorUpSprite != null ? anchorUpSprite : anchorSprite;
-                    hangFrame = 0;
-                    hangDir = 1;
+                    hangStep = 0;
                     hangTimer = 0f;
                 }
                 else if (n.x > 0.5f)
                 {
                     result = anchorUpSprite != null ? anchorUpSprite : anchorSprite;
                     flip = true;
-                    hangFrame = 0;
-                    hangDir = 1;
+                    hangStep = 0;
                     hangTimer = 0f;
                 }
                 else
                 {
                     result = anchorSprite;
-                    hangFrame = 0;
-                    hangDir = 1;
+                    hangStep = 0;
                     hangTimer = 0f;
                 }
 
@@ -85,8 +82,7 @@ namespace CGJ2026
                 return;
             }
 
-            hangFrame = 0;
-            hangDir = 1;
+            hangStep = 0;
             hangTimer = 0f;
 
             if (!isGrounded && jumpSprites.Length >= 3)

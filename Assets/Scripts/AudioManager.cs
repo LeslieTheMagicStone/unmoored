@@ -65,13 +65,15 @@ namespace CGJ2026
             oneShotSource.playOnAwake = false;
             oneShotSource.spatialBlend = 0f;
 
-            musicSource = gameObject.AddComponent<AudioSource>();
+            var musicGo = new GameObject("MusicSource");
+            musicGo.transform.SetParent(transform);
+            musicSource = musicGo.AddComponent<AudioSource>();
             musicSource.playOnAwake = false;
             musicSource.spatialBlend = 0f;
             musicSource.loop = true;
             musicSource.volume = 0f;
 
-            musicLowPass = gameObject.AddComponent<AudioLowPassFilter>();
+            musicLowPass = musicGo.AddComponent<AudioLowPassFilter>();
             musicLowPass.cutoffFrequency = LowPassCutoffOpen;
             musicLowPass.enabled = false;
 
