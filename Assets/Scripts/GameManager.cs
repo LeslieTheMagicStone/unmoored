@@ -55,6 +55,19 @@ namespace CGJ2026
         {
             if (timing)
                 elapsedTime += Time.deltaTime;
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+                QuitGame();
+        }
+
+        public static void QuitGame()
+        {
+            Time.timeScale = 1f;
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
 
         IEnumerator FadeFromBlack()

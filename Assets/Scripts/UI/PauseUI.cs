@@ -34,12 +34,6 @@ namespace CGJ2026
             AddHoverAnim(menuBtn);
         }
 
-        void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.Escape))
-                TogglePause();
-        }
-
         void TogglePause()
         {
             if (isPaused) Resume();

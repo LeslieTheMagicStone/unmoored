@@ -38,7 +38,7 @@ namespace CGJ2026
             CreateButton(canvasGo.transform, "PlayBtn", new Vector2(0.5f, 0.45f), "mainmenu_play",
                 () => GameManager.Instance.LoadGame());
             CreateButton(canvasGo.transform, "QuitBtn", new Vector2(0.5f, 0.3f), "mainmenu_quit",
-                () => Application.Quit());
+                GameManager.QuitGame);
         }
 
         void CreateButton(Transform parent, string name, Vector2 anchor, string locKey, UnityEngine.Events.UnityAction onClick)
