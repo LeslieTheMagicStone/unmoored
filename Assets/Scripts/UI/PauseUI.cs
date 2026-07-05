@@ -88,6 +88,7 @@ namespace CGJ2026
 
             var pBtn = pauseBtn.AddComponent<Button>();
             pBtn.onClick.AddListener(TogglePause);
+            pBtn.onClick.AddListener(() => AudioManager.Instance?.PlayUIClick());
 
             var pTextGo = new GameObject("Text");
             pTextGo.transform.SetParent(pauseBtn.transform, false);
@@ -113,7 +114,11 @@ namespace CGJ2026
             rect.sizeDelta = new Vector2(200, 45);
 
             var btn = go.AddComponent<Button>();
-            btn.onClick.AddListener(() => onClick());
+            btn.onClick.AddListener(() =>
+            {
+                AudioManager.Instance?.PlayUIClick();
+                onClick();
+            });
 
             var textGo = new GameObject("Text");
             textGo.transform.SetParent(go.transform, false);
@@ -142,6 +147,7 @@ namespace CGJ2026
             panel.SetActive(true);
             Time.timeScale = 0f;
             AudioManager.Instance?.PlayPause();
+            AudioManager.Instance?.SetMusicLowPass(true);
         }
 
         void Resume()
@@ -149,6 +155,7 @@ namespace CGJ2026
             isPaused = false;
             panel.SetActive(false);
             Time.timeScale = 1f;
+            AudioManager.Instance?.SetMusicLowPass(false);
         }
 
         void Restart()
@@ -156,12 +163,14 @@ namespace CGJ2026
             Time.timeScale = 1f;
             panel.SetActive(false);
             isPaused = false;
+            AudioManager.Instance?.SetMusicLowPass(false);
             LevelManager.Instance?.RespawnPlayers();
         }
 
         void GoToMenu()
         {
             Time.timeScale = 1f;
+            AudioManager.Instance?.SetMusicLowPass(false);
             GameManager.Instance?.LoadMainMenu();
         }
 

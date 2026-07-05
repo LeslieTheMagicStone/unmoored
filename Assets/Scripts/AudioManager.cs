@@ -26,6 +26,7 @@ namespace CGJ2026
         [SerializeField] AudioClip deathClip;
         [SerializeField] AudioClip checkpointClip;
         [SerializeField] AudioClip pauseClip;
+        [SerializeField] AudioClip uiClickClip;
 
         [Header("Music")]
         [SerializeField] AudioClip musicTrack;
@@ -34,7 +35,13 @@ namespace CGJ2026
         AudioSource source;
         AudioSource oneShotSource;
         AudioSource musicSource;
+        AudioLowPassFilter musicLowPass;
         int walkIndex;
+
+        const float LowPassCutoffMuffled = 300f;
+        const float LowPassCutoffOpen = 22000f;
+        const float LowPassResonance = 2f;
+        const float LowPassTransitionDuration = 0.5f;
 
         public static AudioManager Instance { get; private set; }
 
@@ -62,6 +69,10 @@ namespace CGJ2026
             musicSource.loop = true;
             musicSource.volume = 0f;
 
+            musicLowPass = gameObject.AddComponent<AudioLowPassFilter>();
+            musicLowPass.cutoffFrequency = LowPassCutoffOpen;
+            musicLowPass.enabled = false;
+
             if (musicTrack != null)
                 PlayMusic();
         }
@@ -71,12 +82,35 @@ namespace CGJ2026
             if (musicTrack == null) return;
             musicSource.clip = musicTrack;
             musicSource.Play();
-            musicSource.DOFade(musicVolume, fadeDuration);
+            musicSource.DOFade(musicVolume, fadeDuration).SetUpdate(true);
         }
 
         public void StopMusic(float fadeDuration = 1f)
         {
-            musicSource.DOFade(0f, fadeDuration).OnComplete(() => musicSource.Stop());
+            musicSource.DOFade(0f, fadeDuration).SetUpdate(true).OnComplete(() => musicSource.Stop());
+        }
+
+        public void SetMusicLowPass(bool enabled)
+        {
+            if (enabled)
+            {
+                musicLowPass.enabled = true;
+                musicLowPass.lowpassResonanceQ = LowPassResonance;
+                DOTween.To(() => musicLowPass.cutoffFrequency,
+                    x => musicLowPass.cutoffFrequency = x,
+                    LowPassCutoffMuffled, LowPassTransitionDuration).SetUpdate(true);
+            }
+            else
+            {
+                DOTween.To(() => musicLowPass.cutoffFrequency,
+                    x => musicLowPass.cutoffFrequency = x,
+                    LowPassCutoffOpen, LowPassTransitionDuration).SetUpdate(true)
+                    .OnComplete(() =>
+                    {
+                        musicLowPass.enabled = false;
+                        musicLowPass.lowpassResonanceQ = 1f;
+                    });
+            }
         }
 
         void OnEnable()
@@ -119,6 +153,7 @@ namespace CGJ2026
         public void PlayRopeTaut() => oneShotSource.PlayOneShot(ropeTautClip);
         public void PlayAnchorSnap() => oneShotSource.PlayOneShot(anchorSnapClip);
         public void PlayPause() => oneShotSource.PlayOneShot(pauseClip);
+        public void PlayUIClick() => oneShotSource.PlayOneShot(uiClickClip);
 
         void OnAnchor(object _)
         {
