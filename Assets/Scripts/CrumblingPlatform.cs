@@ -62,8 +62,7 @@ namespace CGJ2026
             if (pc == null) return;
             if (broken) return;
 
-            if (!PlayerIsOnPlatform(pc))
-                return;
+            if (pc.AnchoredCollider != platformCollider) return;
 
             anchoredPlayers.Add(pc);
             if (!triggered)
@@ -81,16 +80,6 @@ namespace CGJ2026
         {
             if (broken || triggered)
                 Respawn();
-        }
-
-        bool PlayerIsOnPlatform(PlayerController pc)
-        {
-            Bounds b = platformCollider.bounds;
-            Vector2 pos = pc.transform.position;
-            float margin = 1.0f;
-            bool result = pos.x > b.min.x - margin && pos.x < b.max.x + margin
-                && pos.y > b.min.y - margin && pos.y < b.max.y + margin;
-            return result;
         }
 
         void Activate()
