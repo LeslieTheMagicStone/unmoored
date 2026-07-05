@@ -1,6 +1,4 @@
-using System;
 using DG.Tweening;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,9 +7,32 @@ namespace CGJ2026
 {
     public class PauseUI : MonoBehaviour
     {
-        GameObject panel;
-        GameObject pauseBtn;
+        [SerializeField] GameObject pausePanel;
+        [SerializeField] Button pauseBtn;
+        [SerializeField] Button resumeBtn;
+        [SerializeField] Button restartBtn;
+        [SerializeField] Button menuBtn;
+
+        [SerializeField] float hoverScale = 1.1f;
+        [SerializeField] float pressScale = 0.95f;
+        [SerializeField] float animDuration = 0.15f;
+
         bool isPaused;
+
+        void Start()
+        {
+            pausePanel.SetActive(false);
+
+            resumeBtn.onClick.AddListener(Resume);
+            restartBtn.onClick.AddListener(Restart);
+            menuBtn.onClick.AddListener(GoToMenu);
+            pauseBtn.onClick.AddListener(TogglePause);
+
+            AddHoverAnim(pauseBtn);
+            AddHoverAnim(resumeBtn);
+            AddHoverAnim(restartBtn);
+            AddHoverAnim(menuBtn);
+        }
 
         void Update()
         {
@@ -19,178 +40,16 @@ namespace CGJ2026
                 TogglePause();
         }
 
-        void OnEnable()
-        {
-            CreateUI();
-        }
-
-        void CreateUI()
-        {
-            if (FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)
-            {
-                var esGo = new GameObject("EventSystem");
-                esGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
-                esGo.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
-            }
-
-            var canvasGo = new GameObject("PauseCanvas");
-            canvasGo.transform.SetParent(transform);
-            var canvas = canvasGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 20;
-            canvasGo.AddComponent<CanvasScaler>();
-            canvasGo.AddComponent<GraphicRaycaster>();
-
-            // Dim background
-            panel = new GameObject("Panel");
-            panel.transform.SetParent(canvasGo.transform, false);
-            var panelImg = panel.AddComponent<Image>();
-            panelImg.color = new Color(0, 0, 0, 0.7f);
-            var panelRect = panel.GetComponent<RectTransform>();
-            panelRect.anchorMin = Vector2.zero;
-            panelRect.anchorMax = Vector2.one;
-            panelRect.sizeDelta = Vector2.zero;
-            panel.SetActive(false);
-
-            // Container for buttons
-            var container = new GameObject("Container");
-            container.transform.SetParent(panel.transform, false);
-            var contRect = container.AddComponent<RectTransform>();
-            contRect.anchorMin = new Vector2(0.5f, 0.5f);
-            contRect.anchorMax = new Vector2(0.5f, 0.5f);
-            contRect.sizeDelta = new Vector2(300, 250);
-
-            // Title
-            var titleGo = new GameObject("Title");
-            titleGo.transform.SetParent(container.transform, false);
-            var title = titleGo.AddComponent<TextMeshProUGUI>();
-            title.text = "Paused";
-            title.fontSize = 48;
-            title.alignment = TextAlignmentOptions.Center;
-            title.color = Color.white;
-            var titleRect = title.rectTransform;
-            titleRect.anchoredPosition = new Vector2(0, 110);
-            titleRect.sizeDelta = new Vector2(300, 60);
-
-            CreateButton(container.transform, "ResumeBtn", new Vector2(0, 40), "Resume", Resume);
-            CreateButton(container.transform, "RestartBtn", new Vector2(0, -20), "Restart", Restart);
-            CreateButton(container.transform, "MenuBtn", new Vector2(0, -80), "Main Menu", GoToMenu);
-
-            // Pause toggle button in top-right corner
-            pauseBtn = new GameObject("PauseBtn");
-            pauseBtn.transform.SetParent(canvasGo.transform, false);
-            var pImg = pauseBtn.AddComponent<Image>();
-            pImg.color = new Color(0, 0, 0, 0.4f);
-            var pRect = pauseBtn.GetComponent<RectTransform>();
-            pRect.anchorMin = new Vector2(0, 1);
-            pRect.anchorMax = new Vector2(0, 1);
-            pRect.pivot = new Vector2(0, 1);
-            pRect.anchoredPosition = new Vector2(15, -15);
-            pRect.sizeDelta = new Vector2(40, 40);
-
-            var pBtn = pauseBtn.AddComponent<Button>();
-            pBtn.onClick.AddListener(TogglePause);
-            pBtn.onClick.AddListener(() => AudioManager.Instance?.PlayUIClick());
-
-            AddButtonAnimations(pauseBtn);
-
-            var pTextGo = new GameObject("Text");
-            pTextGo.transform.SetParent(pauseBtn.transform, false);
-            var pText = pTextGo.AddComponent<TextMeshProUGUI>();
-            pText.text = "II";
-            pText.fontSize = 22;
-            pText.alignment = TextAlignmentOptions.Center;
-            pText.color = Color.white;
-            var pTextRect = pText.rectTransform;
-            pTextRect.anchorMin = Vector2.zero;
-            pTextRect.anchorMax = Vector2.one;
-            pTextRect.sizeDelta = Vector2.zero;
-        }
-
-        void CreateButton(Transform parent, string name, Vector2 pos, string label, Action onClick)
-        {
-            var go = new GameObject(name);
-            go.transform.SetParent(parent, false);
-            var img = go.AddComponent<Image>();
-            img.color = new Color(0.2f, 0.2f, 0.2f, 1f);
-            var rect = go.GetComponent<RectTransform>();
-            rect.anchoredPosition = pos;
-            rect.sizeDelta = new Vector2(200, 45);
-
-            var btn = go.AddComponent<Button>();
-            btn.onClick.AddListener(() =>
-            {
-                AudioManager.Instance?.PlayUIClick();
-                onClick();
-            });
-
-            AddButtonAnimations(go);
-
-            var textGo = new GameObject("Text");
-            textGo.transform.SetParent(go.transform, false);
-            var text = textGo.AddComponent<TextMeshProUGUI>();
-            text.text = label;
-            text.fontSize = 28;
-            text.alignment = TextAlignmentOptions.Center;
-            text.color = Color.white;
-            var textRect = text.rectTransform;
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.sizeDelta = Vector2.zero;
-        }
-
-        static void AddButtonAnimations(GameObject go)
-        {
-            var t = go.transform;
-            bool isHovered = false;
-
-            AddEventTrigger(go, EventTriggerType.PointerEnter, _ =>
-            {
-                isHovered = true;
-                AudioManager.Instance?.PlayUIHover();
-                t.DOScale(1.1f, 0.15f).SetUpdate(true);
-            });
-
-            AddEventTrigger(go, EventTriggerType.PointerExit, _ =>
-            {
-                isHovered = false;
-                t.DOScale(1f, 0.15f).SetUpdate(true);
-            });
-
-            AddEventTrigger(go, EventTriggerType.PointerDown, _ =>
-            {
-                t.localScale = Vector3.one;
-                t.DOScale(0.95f, 0.05f).SetUpdate(true);
-            });
-
-            AddEventTrigger(go, EventTriggerType.PointerUp, _ =>
-            {
-                t.DOScale(isHovered ? 1.1f : 1f, 0.15f).SetUpdate(true);
-            });
-        }
-
-        static void AddEventTrigger(GameObject go, EventTriggerType type, Action<BaseEventData> action)
-        {
-            var trigger = go.GetComponent<EventTrigger>();
-            if (trigger == null) trigger = go.AddComponent<EventTrigger>();
-
-            var entry = new EventTrigger.Entry { eventID = type };
-            entry.callback.AddListener(e => action(e));
-            trigger.triggers.Add(entry);
-        }
-
         void TogglePause()
         {
-            if (isPaused)
-                Resume();
-            else
-                Pause();
+            if (isPaused) Resume();
+            else Pause();
         }
 
         void Pause()
         {
             isPaused = true;
-            panel.SetActive(true);
+            pausePanel.SetActive(true);
             Time.timeScale = 0f;
             AudioManager.Instance?.PlayPause();
             AudioManager.Instance?.SetMusicLowPass(true);
@@ -199,16 +58,16 @@ namespace CGJ2026
         void Resume()
         {
             isPaused = false;
-            panel.SetActive(false);
+            pausePanel.SetActive(false);
             Time.timeScale = 1f;
             AudioManager.Instance?.SetMusicLowPass(false);
         }
 
         void Restart()
         {
-            Time.timeScale = 1f;
-            panel.SetActive(false);
             isPaused = false;
+            pausePanel.SetActive(false);
+            Time.timeScale = 1f;
             AudioManager.Instance?.SetMusicLowPass(false);
             LevelManager.Instance?.RespawnPlayers();
         }
@@ -223,6 +82,46 @@ namespace CGJ2026
         void OnDisable()
         {
             Time.timeScale = 1f;
+        }
+
+        void AddHoverAnim(Button btn)
+        {
+            if (btn == null) return;
+            var t = btn.transform;
+            bool isHovered = false;
+
+            AddTrigger(btn, EventTriggerType.PointerEnter, _ =>
+            {
+                isHovered = true;
+                AudioManager.Instance?.PlayUIHover();
+                t.DOScale(hoverScale, animDuration).SetUpdate(true);
+            });
+
+            AddTrigger(btn, EventTriggerType.PointerExit, _ =>
+            {
+                isHovered = false;
+                t.DOScale(1f, animDuration).SetUpdate(true);
+            });
+
+            AddTrigger(btn, EventTriggerType.PointerDown, _ =>
+            {
+                t.DOScale(pressScale, animDuration).SetUpdate(true);
+            });
+
+            AddTrigger(btn, EventTriggerType.PointerUp, _ =>
+            {
+                AudioManager.Instance?.PlayUIClick();
+                t.DOScale(isHovered ? hoverScale : 1f, animDuration).SetUpdate(true);
+            });
+        }
+
+        static void AddTrigger(Button btn, EventTriggerType type, UnityEngine.Events.UnityAction<BaseEventData> action)
+        {
+            var trigger = btn.GetComponent<EventTrigger>();
+            if (trigger == null) trigger = btn.gameObject.AddComponent<EventTrigger>();
+            var entry = new EventTrigger.Entry { eventID = type };
+            entry.callback.AddListener(action);
+            trigger.triggers.Add(entry);
         }
     }
 }

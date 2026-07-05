@@ -8,6 +8,12 @@
   <string key="gameover_menu">Main Menu / 主菜单</string>
   <string key="gameclear_title">You Win! / 通关！</string>
   <string key="gameclear_again">Play Again / 再玩一次</string>
+  <string key="mainmenu_anchor_instruction">Both players anchor to start / 双方锚定即开始</string>
+  <string key="mainmenu_p1_prompt">P1: Press S / P1：按 S 键</string>
+  <string key="mainmenu_p2_prompt">P2: Press ↓ / P2：按 ↓ 键</string>
+  <string key="mainmenu_p1_anchored">P1 Anchored! / P1 已锚定！</string>
+  <string key="mainmenu_p2_anchored">P2 Anchored! / P2 已锚定！</string>
+  <string key="mainmenu_both_anchored">Both Anchored! / 双方已锚定！</string>
   <string key="hud_lives">Lives / 生命</string>
   <string key="hud_level">Floor / 第</string>
 </strings>
