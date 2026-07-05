@@ -61,6 +61,12 @@ MonoBehaviour:
   gateOpenClip: {fileID: 8300000, guid: 180319768d7c1417faa3be41020c2e21, type: 3}
   gateCloseClip: {fileID: 8300000, guid: 551b011867da449e88151c9cf53d96cc, type: 3}
   stompClip: {fileID: 8300000, guid: 253124601f16349679adfe82fe1bcecd, type: 3}
+  bounceClips:
+  - {fileID: 8300000, guid: 8011aaaecc32c4d38932716bdfbe5eb8, type: 3}
+  - {fileID: 8300000, guid: 9c937ff0f2912454499dea441781f17b, type: 3}
+  - {fileID: 8300000, guid: 6bf5324997e2d4f1c895f23d4c05e40b, type: 3}
+  - {fileID: 8300000, guid: b9b02f13b30694c40839a47d40e5b57e, type: 3}
+  - {fileID: 8300000, guid: ec9b8ecc9a74347d3a3feac10ab8d52a, type: 3}
   deathClip: {fileID: 8300000, guid: 9cf213bbc4bde4d2098789716df94563, type: 3}
   respawnClip: {fileID: 8300000, guid: babd4636ab72d4c8aa943e7abe88e456, type: 3}
   checkpointClip: {fileID: 8300000, guid: 853cd472d33844b12b69ec27ffb94f8c, type: 3}
