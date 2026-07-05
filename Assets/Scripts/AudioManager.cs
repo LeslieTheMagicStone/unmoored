@@ -24,6 +24,7 @@ namespace CGJ2026
 
         [Header("UI / Events")]
         [SerializeField] AudioClip deathClip;
+        [SerializeField] AudioClip respawnClip;
         [SerializeField] AudioClip checkpointClip;
         [SerializeField] AudioClip pauseClip;
         [SerializeField] AudioClip uiClickClip;
@@ -156,6 +157,7 @@ namespace CGJ2026
         public void PlayPause() => oneShotSource.PlayOneShot(pauseClip);
         public void PlayUIClick() => oneShotSource.PlayOneShot(uiClickClip);
         public void PlayUIHover() => oneShotSource.PlayOneShot(uiHoverClip);
+        public void PlayRespawn() => oneShotSource.PlayOneShot(respawnClip);
 
         void OnAnchor(object _)
         {

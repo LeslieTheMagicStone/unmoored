@@ -1,3 +1,5 @@
+using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 
 namespace CGJ2026
@@ -12,11 +14,16 @@ namespace CGJ2026
         [SerializeField] PlayerConfig config;
         [SerializeField] KeyCode respawnKey = KeyCode.R;
 
+        [Header("Respawn Animation")]
+        [SerializeField] bool useRespawnAnimation = true;
+        [SerializeField] float respawnAnimDuration = 0.35f;
+
         Vector3 checkpoint;
         int lives;
         float deathCooldown;
         bool aReachedWin;
         bool bReachedWin;
+        bool isRespawning;
 
         public int Lives => lives;
 
@@ -56,7 +63,7 @@ namespace CGJ2026
 
         void Update()
         {
-            if (Input.GetKeyDown(respawnKey))
+            if (Input.GetKeyDown(respawnKey) && !isRespawning)
                 RespawnPlayers();
         }
 
@@ -94,16 +101,78 @@ namespace CGJ2026
 
         public void RespawnPlayers()
         {
+            if (useRespawnAnimation)
+                StartCoroutine(RespawnAnimation());
+            else
+                DoRespawn();
+        }
+
+        IEnumerator RespawnAnimation()
+        {
+            isRespawning = true;
+
+            var pcA = playerA != null ? playerA.GetComponent<PlayerController>() : null;
+            var pcB = playerB != null ? playerB.GetComponent<PlayerController>() : null;
+            var rbA = playerA != null ? playerA.GetComponent<Rigidbody2D>() : null;
+            var rbB = playerB != null ? playerB.GetComponent<Rigidbody2D>() : null;
+
+            // Freeze players at death position
+            if (pcA != null) pcA.enabled = false;
+            if (pcB != null) pcB.enabled = false;
+            if (rbA != null) { rbA.velocity = Vector2.zero; rbA.bodyType = RigidbodyType2D.Kinematic; }
+            if (rbB != null) { rbB.velocity = Vector2.zero; rbB.bodyType = RigidbodyType2D.Kinematic; }
+
+            Vector3 scaleA = playerA != null ? playerA.localScale : Vector3.one;
+            Vector3 scaleB = playerB != null ? playerB.localScale : Vector3.one;
+
+            // Scale down at death point
+            float shrinkDuration = respawnAnimDuration * 0.25f;
+            if (playerA != null) playerA.DOScale(Vector3.zero, shrinkDuration).SetUpdate(true);
+            if (playerB != null) playerB.DOScale(Vector3.zero, shrinkDuration).SetUpdate(true);
+            yield return new WaitForSecondsRealtime(shrinkDuration);
+
+            // Teleport to respawn
+            Vector3 respawnPos = checkpoint + Vector3.up * config.RespawnHeightOffset;
+            if (playerA != null) playerA.position = respawnPos;
+            if (playerB != null) playerB.position = respawnPos + Vector3.right * 0.5f;
+
+            var am = AudioManager.Instance;
+            if (am != null) am.PlayRespawn();
+
+            if (pcA != null) pcA.ResetToHuman();
+            if (pcB != null) pcB.ResetToHuman();
+            aReachedWin = false;
+            bReachedWin = false;
+            EventBus.Emit(E.PlayerRespawned);
+
+            // Restore RBs
+            if (rbA != null) rbA.bodyType = RigidbodyType2D.Dynamic;
+            if (rbB != null) rbB.bodyType = RigidbodyType2D.Dynamic;
+
+            // Scale back up with overshoot bounce
+            float growDuration = respawnAnimDuration * 0.75f;
+            if (playerA != null) playerA.DOScale(scaleA, growDuration).SetEase(Ease.OutBack).SetUpdate(true);
+            if (playerB != null) playerB.DOScale(scaleB, growDuration).SetEase(Ease.OutBack).SetUpdate(true);
+            yield return new WaitForSecondsRealtime(growDuration);
+
+            if (pcA != null) pcA.enabled = true;
+            if (pcB != null) pcB.enabled = true;
+
+            isRespawning = false;
+        }
+
+        void DoRespawn()
+        {
             Vector3 respawnPos = checkpoint + Vector3.up * config.RespawnHeightOffset;
 
             var pcA = playerA != null ? playerA.GetComponent<PlayerController>() : null;
             var pcB = playerB != null ? playerB.GetComponent<PlayerController>() : null;
 
             if (playerA != null) playerA.position = respawnPos;
-            if (playerB != null) playerB.position = respawnPos + Vector3.right * 0.5f; // slight offset so they don't stack
+            if (playerB != null) playerB.position = respawnPos + Vector3.right * 0.5f;
 
-            pcA?.ResetToHuman();
-            pcB?.ResetToHuman();
+            if (pcA != null) pcA.ResetToHuman();
+            if (pcB != null) pcB.ResetToHuman();
 
             aReachedWin = false;
             bReachedWin = false;
