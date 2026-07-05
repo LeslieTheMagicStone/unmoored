@@ -50,6 +50,7 @@ namespace CGJ2026
         {
             isPaused = true;
             pausePanel.SetActive(true);
+            if (pauseBtn != null) pauseBtn.gameObject.SetActive(false);
             Time.timeScale = 0f;
             AudioManager.Instance?.PlayPause();
             AudioManager.Instance?.SetMusicLowPass(true);
@@ -59,6 +60,7 @@ namespace CGJ2026
         {
             isPaused = false;
             pausePanel.SetActive(false);
+            if (pauseBtn != null) pauseBtn.gameObject.SetActive(true);
             Time.timeScale = 1f;
             AudioManager.Instance?.SetMusicLowPass(false);
         }
