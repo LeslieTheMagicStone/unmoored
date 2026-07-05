@@ -1,6 +1,8 @@
 using System;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace CGJ2026
@@ -90,6 +92,8 @@ namespace CGJ2026
             pBtn.onClick.AddListener(TogglePause);
             pBtn.onClick.AddListener(() => AudioManager.Instance?.PlayUIClick());
 
+            AddButtonAnimations(pauseBtn);
+
             var pTextGo = new GameObject("Text");
             pTextGo.transform.SetParent(pauseBtn.transform, false);
             var pText = pTextGo.AddComponent<TextMeshProUGUI>();
@@ -120,6 +124,8 @@ namespace CGJ2026
                 onClick();
             });
 
+            AddButtonAnimations(go);
+
             var textGo = new GameObject("Text");
             textGo.transform.SetParent(go.transform, false);
             var text = textGo.AddComponent<TextMeshProUGUI>();
@@ -131,6 +137,46 @@ namespace CGJ2026
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;
             textRect.sizeDelta = Vector2.zero;
+        }
+
+        static void AddButtonAnimations(GameObject go)
+        {
+            var t = go.transform;
+            bool isHovered = false;
+
+            AddEventTrigger(go, EventTriggerType.PointerEnter, _ =>
+            {
+                isHovered = true;
+                AudioManager.Instance?.PlayUIHover();
+                t.DOScale(1.1f, 0.15f).SetUpdate(true);
+            });
+
+            AddEventTrigger(go, EventTriggerType.PointerExit, _ =>
+            {
+                isHovered = false;
+                t.DOScale(1f, 0.15f).SetUpdate(true);
+            });
+
+            AddEventTrigger(go, EventTriggerType.PointerDown, _ =>
+            {
+                t.localScale = Vector3.one;
+                t.DOScale(0.95f, 0.05f).SetUpdate(true);
+            });
+
+            AddEventTrigger(go, EventTriggerType.PointerUp, _ =>
+            {
+                t.DOScale(isHovered ? 1.1f : 1f, 0.15f).SetUpdate(true);
+            });
+        }
+
+        static void AddEventTrigger(GameObject go, EventTriggerType type, Action<BaseEventData> action)
+        {
+            var trigger = go.GetComponent<EventTrigger>();
+            if (trigger == null) trigger = go.AddComponent<EventTrigger>();
+
+            var entry = new EventTrigger.Entry { eventID = type };
+            entry.callback.AddListener(e => action(e));
+            trigger.triggers.Add(entry);
         }
 
         void TogglePause()

@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6237698127486148530
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5000302518228125460}
+  - component: {fileID: 1779463461510587388}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5000302518228125460
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6237698127486148530}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1779463461510587388
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6237698127486148530}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8142d8a1539b4598ac2e6153c52c176, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  walkClips:
+  - {fileID: 8300000, guid: d8a32fe4056674e0fb6334bc4e36b4bb, type: 3}
+  landClips:
+  - {fileID: 8300000, guid: 16333165d0d0744619d8da8d2852af54, type: 3}
+  - {fileID: 8300000, guid: 2b4e71a030ec440f2b2ebf77d836630d, type: 3}
+  - {fileID: 8300000, guid: cf77be6eb38664420ae93ef86c98888c, type: 3}
+  - {fileID: 8300000, guid: 19415e7314d0e4335b17dc944a56874e, type: 3}
+  - {fileID: 8300000, guid: f040038816f474e7ba24f0bdb7d311d0, type: 3}
+  jumpClip: {fileID: 8300000, guid: d8a32fe4056674e0fb6334bc4e36b4bb, type: 3}
+  anchorClip: {fileID: 8300000, guid: a4c8ab3a88268487eaa4b19460a5f15c, type: 3}
+  anchorSnapClip: {fileID: 8300000, guid: d84f166bfc75b4c188e79d2234a3fdd4, type: 3}
+  releaseClip: {fileID: 8300000, guid: 834d17caa35cf4a83bab7195c596e097, type: 3}
+  ropeTautClip: {fileID: 8300000, guid: 035f38f353a094469bdcc5b02f2816c2, type: 3}
+  crumbleClip: {fileID: 8300000, guid: 8a6b81a7f318f4bc28c0101a2b55ea2e, type: 3}
+  stompClip: {fileID: 8300000, guid: 253124601f16349679adfe82fe1bcecd, type: 3}
+  deathClip: {fileID: 8300000, guid: 1d0d6ada984cf4cf8b68ba948c8fa741, type: 3}
+  checkpointClip: {fileID: 8300000, guid: 853cd472d33844b12b69ec27ffb94f8c, type: 3}
+  pauseClip: {fileID: 8300000, guid: babd4636ab72d4c8aa943e7abe88e456, type: 3}
+  uiClickClip: {fileID: 8300000, guid: 32bb89a113f6841959c6234c0c89f050, type: 3}
+  uiHoverClip: {fileID: 8300000, guid: 834d17caa35cf4a83bab7195c596e097, type: 3}
+  musicTrack: {fileID: 8300000, guid: e3c042580ce1a46e487680f9717ebc52, type: 3}
+  musicVolume: 0.5

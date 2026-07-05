@@ -27,6 +27,7 @@ namespace CGJ2026
         [SerializeField] AudioClip checkpointClip;
         [SerializeField] AudioClip pauseClip;
         [SerializeField] AudioClip uiClickClip;
+        [SerializeField] AudioClip uiHoverClip;
 
         [Header("Music")]
         [SerializeField] AudioClip musicTrack;
@@ -154,6 +155,7 @@ namespace CGJ2026
         public void PlayAnchorSnap() => oneShotSource.PlayOneShot(anchorSnapClip);
         public void PlayPause() => oneShotSource.PlayOneShot(pauseClip);
         public void PlayUIClick() => oneShotSource.PlayOneShot(uiClickClip);
+        public void PlayUIHover() => oneShotSource.PlayOneShot(uiHoverClip);
 
         void OnAnchor(object _)
         {
