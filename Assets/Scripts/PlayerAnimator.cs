@@ -5,12 +5,13 @@ namespace CGJ2026
     public class PlayerAnimator : MonoBehaviour
     {
         [SerializeField] PlayerController controller;
+        [SerializeField] Transform visualPivot;
         [SerializeField] Sprite idleSprite;
         [SerializeField] Sprite[] walkSprites;
         [SerializeField] Sprite[] jumpSprites;
-        [SerializeField] Sprite anchorSprite;    // down (standing)
-        [SerializeField] Sprite anchorUpSprite;  // left / right wall (flipX for right)
-        [SerializeField] Sprite[] anchorHangSprites; // ceiling hang ping-pong
+        [SerializeField] Sprite anchorSprite;
+        [SerializeField] Sprite anchorUpSprite;
+        [SerializeField] Sprite[] anchorHangSprites;
         [SerializeField] float fps = 12f;
 
         SpriteRenderer spriteRenderer;
@@ -23,9 +24,11 @@ namespace CGJ2026
 
         void Awake()
         {
-            spriteRenderer = GetComponent<SpriteRenderer>();
+            if (visualPivot == null)
+                throw new System.Exception("PlayerAnimator: missing visualPivot");
+            spriteRenderer = visualPivot.GetComponentInChildren<SpriteRenderer>();
             if (spriteRenderer == null)
-                throw new System.Exception("PlayerAnimator: missing SpriteRenderer");
+                throw new System.Exception("PlayerAnimator: missing SpriteRenderer under visualPivot");
         }
 
         void LateUpdate()
@@ -69,7 +72,7 @@ namespace CGJ2026
                     flip = true;
 
                 spriteRenderer.sprite = result;
-                spriteRenderer.flipX = flip;
+                visualPivot.localScale = new Vector3(flip ? -1 : 1, 1, 1);
                 return;
             }
 
@@ -115,9 +118,9 @@ namespace CGJ2026
 
             spriteRenderer.sprite = result;
             if (controller.Form == CharacterForm.Anchor)
-                spriteRenderer.flipX = flip;
+                visualPivot.localScale = new Vector3(flip ? -1 : 1, 1, 1);
             else if (controller.MoveInput != 0f)
-                spriteRenderer.flipX = controller.MoveInput < 0f;
+                visualPivot.localScale = new Vector3(controller.MoveInput < 0f ? -1 : 1, 1, 1);
         }
     }
 }
