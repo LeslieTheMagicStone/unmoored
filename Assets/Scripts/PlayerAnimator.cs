@@ -13,8 +13,11 @@ namespace CGJ2026
         [SerializeField] Sprite anchorUpSprite;
         [SerializeField] Sprite[] anchorHangSprites;
         [SerializeField] float fps = 12f;
+        [SerializeField] float wallHangOffsetX = 0f;
 
         SpriteRenderer spriteRenderer;
+        Transform spriteTransform;
+        Vector2 spriteDefaultPos;
         float walkTimer;
         float takeoffTimer;
         int walkFrame;
@@ -29,6 +32,8 @@ namespace CGJ2026
             spriteRenderer = visualPivot.GetComponentInChildren<SpriteRenderer>();
             if (spriteRenderer == null)
                 throw new System.Exception("PlayerAnimator: missing SpriteRenderer under visualPivot");
+            spriteTransform = spriteRenderer.transform;
+            spriteDefaultPos = spriteTransform.localPosition;
         }
 
         void LateUpdate()
@@ -73,11 +78,18 @@ namespace CGJ2026
 
                 spriteRenderer.sprite = result;
                 visualPivot.localScale = new Vector3(flip ? -1 : 1, 1, 1);
+                float wx = 0f;
+                if (Mathf.Abs(n.x) > 0.5f)
+                    wx = n.x > 0f ? -wallHangOffsetX : wallHangOffsetX;
+                spriteTransform.localPosition = new Vector2(wx, 0f);
+
+
                 return;
             }
 
             hangStep = 0;
             hangTimer = 0f;
+            spriteTransform.localPosition = spriteDefaultPos;
 
             if (!isGrounded && jumpSprites.Length >= 3)
             {

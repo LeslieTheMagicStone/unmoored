@@ -106,7 +106,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 10.09, y: 6.29}
+  m_Size: {x: 3, y: 6.29}
   m_EdgeRadius: 0
 --- !u!114 &1507029641119418151
 MonoBehaviour:
@@ -166,6 +166,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: bcdcc4953ca8542fc8f6d953d6dfd1c6, type: 3}
   - {fileID: 21300000, guid: 4e99987eeacfd489794257b404470ed5, type: 3}
   fps: 12
+  wallHangOffsetX: 1.94
 --- !u!1 &2705319946395294664
 GameObject:
   m_ObjectHideFlags: 0
@@ -192,7 +193,7 @@ Transform:
   m_GameObject: {fileID: 2705319946395294664}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.08, y: 0, z: 0}
+  m_LocalPosition: {x: -2.5, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
