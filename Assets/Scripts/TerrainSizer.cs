@@ -49,12 +49,15 @@ namespace CGJ2026
             if (!SizingInputsChanged())
                 return;
 
-            Apply();
+            ApplyTransformAndCollider();
             CacheSizingInputs();
+
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.delayCall += ApplySpriteSize;
+#endif
         }
 
-        [ContextMenu("Apply Size")]
-        public void Apply()
+        void ApplyTransformAndCollider()
         {
             if (pixelsPerUnit <= 0f)
                 throw new System.Exception($"TerrainSizer [{name}]: pixelsPerUnit must be > 0");
@@ -68,13 +71,23 @@ namespace CGJ2026
             Vector3 scale = transform.localScale;
             transform.localScale = new Vector3(worldWidth, worldHeight, scale.z);
 
-            var spriteRenderer = GetComponent<SpriteRenderer>();
-            if (spriteRenderer != null && spriteRenderer.drawMode != SpriteDrawMode.Simple)
-                spriteRenderer.size = Vector2.one;
-
             var colliderSync = GetComponent<SpriteColliderSync>();
             if (colliderSync != null)
                 colliderSync.Apply();
+        }
+
+        void ApplySpriteSize()
+        {
+            var spriteRenderer = GetComponent<SpriteRenderer>();
+            if (spriteRenderer != null && spriteRenderer.drawMode != SpriteDrawMode.Simple)
+                spriteRenderer.size = Vector2.one;
+        }
+
+        [ContextMenu("Apply Size")]
+        public void Apply()
+        {
+            ApplyTransformAndCollider();
+            ApplySpriteSize();
         }
 
         bool SizingInputsChanged()
