@@ -57,6 +57,7 @@ namespace CGJ2026
         public Vector2 SnapNormal => snapNormal;
         public bool SnappedToAnchorPoint => snappedToAnchorPoint;
         public Collider2D AnchoredCollider => anchoredCollider;
+        public bool IsRespawning { get; set; }
 
         public void ReleaseFromSurface()
         {
@@ -77,7 +78,7 @@ namespace CGJ2026
 
         void Update()
         {
-            ReadInput();
+            if (!IsRespawning) ReadInput();
         }
 
 
@@ -86,6 +87,12 @@ namespace CGJ2026
             float footY = col.bounds.min.y + 0.01f;
             float x = col.bounds.center.x;
             isGrounded = CastFootRays(footY, x, out _);
+
+            if (IsRespawning)
+            {
+                wasGrounded = isGrounded;
+                return;
+            }
 
             // if (form == CharacterForm.Human && !isGrounded && Mathf.Abs(moveInput) > 0.1f)
             //     TryLedgeAssist();

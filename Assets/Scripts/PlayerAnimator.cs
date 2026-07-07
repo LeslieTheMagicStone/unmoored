@@ -16,8 +16,11 @@ namespace CGJ2026
         [SerializeField] float wallHangOffsetX = 0f;
         [SerializeField] float wallHangOffsetY = 0f;
 
+        [SerializeField] Transform scaleRoot;
+
         SpriteRenderer spriteRenderer;
         public Transform VisualPivot => visualPivot;
+        public Transform ScaleRoot => scaleRoot;
 
         Transform spriteTransform;
         Vector2 spriteDefaultPos;

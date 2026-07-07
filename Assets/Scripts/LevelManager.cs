@@ -117,26 +117,28 @@ namespace CGJ2026
             var rbB = playerB != null ? playerB.GetComponent<Rigidbody2D>() : null;
             var animA = playerA != null ? playerA.GetComponent<PlayerAnimator>() : null;
             var animB = playerB != null ? playerB.GetComponent<PlayerAnimator>() : null;
-            var visA = animA != null ? animA.VisualPivot : null;
-            var visB = animB != null ? animB.VisualPivot : null;
+            var scaleA = animA != null ? animA.ScaleRoot : null;
+            var scaleB = animB != null ? animB.ScaleRoot : null;
 
-            // Freeze players at death position
+            // Freeze: block input, disable animators so visual freezes
             var rope = FindObjectOfType<RopeSystem>();
             if (rope != null) rope.SetVisible(false);
-            if (pcA != null) pcA.enabled = false;
-            if (pcB != null) pcB.enabled = false;
+            if (pcA != null) pcA.IsRespawning = true;
+            if (pcB != null) pcB.IsRespawning = true;
+            if (animA != null) animA.enabled = false;
+            if (animB != null) animB.enabled = false;
             if (rbA != null) { rbA.velocity = Vector2.zero; rbA.bodyType = RigidbodyType2D.Kinematic; }
             if (rbB != null) { rbB.velocity = Vector2.zero; rbB.bodyType = RigidbodyType2D.Kinematic; }
 
-            Vector3 scaleA = visA != null ? visA.localScale : Vector3.one;
-            Vector3 scaleB = visB != null ? visB.localScale : Vector3.one;
+            Vector3 scaleAOrig = scaleA != null ? scaleA.localScale : Vector3.one;
+            Vector3 scaleBOrig = scaleB != null ? scaleB.localScale : Vector3.one;
 
             // Scale down visual layer at death point
             float shrinkDuration = respawnAnimDuration * 0.25f;
             var am = AudioManager.Instance;
             if (am != null) am.PlayDeathSound();
-            if (visA != null) visA.DOScale(Vector3.zero, shrinkDuration).SetUpdate(true);
-            if (visB != null) visB.DOScale(Vector3.zero, shrinkDuration).SetUpdate(true);
+            if (scaleA != null) scaleA.DOScale(Vector3.zero, shrinkDuration).SetUpdate(true);
+            if (scaleB != null) scaleB.DOScale(Vector3.zero, shrinkDuration).SetUpdate(true);
             yield return new WaitForSecondsRealtime(shrinkDuration);
 
             // Teleport to respawn
@@ -146,13 +148,12 @@ namespace CGJ2026
 
             if (pcA != null) pcA.ResetToHuman();
             if (pcB != null) pcB.ResetToHuman();
+            // ResetToHuman re-enables Dynamic, keep Kinematic until grow finishes
+            if (rbA != null) rbA.bodyType = RigidbodyType2D.Kinematic;
+            if (rbB != null) rbB.bodyType = RigidbodyType2D.Kinematic;
             aReachedWin = false;
             bReachedWin = false;
             EventBus.Emit(E.PlayerRespawned);
-
-            // Restore RBs
-            if (rbA != null) rbA.bodyType = RigidbodyType2D.Dynamic;
-            if (rbB != null) rbB.bodyType = RigidbodyType2D.Dynamic;
 
             yield return new WaitForSecondsRealtime(0.5f);
 
@@ -160,14 +161,20 @@ namespace CGJ2026
 
             // Scale visual layer back up with overshoot bounce
             float growDuration = respawnAnimDuration * 0.75f;
-            if (visA != null) visA.DOScale(scaleA, growDuration).SetEase(Ease.OutBack, 2.5f).SetUpdate(true);
-            if (visB != null) visB.DOScale(scaleB, growDuration).SetEase(Ease.OutBack, 2.5f).SetUpdate(true);
+            if (scaleA != null) scaleA.DOScale(scaleAOrig, growDuration).SetEase(Ease.OutBack, 2.5f).SetUpdate(true);
+            if (scaleB != null) scaleB.DOScale(scaleBOrig, growDuration).SetEase(Ease.OutBack, 2.5f).SetUpdate(true);
             yield return new WaitForSecondsRealtime(growDuration);
+
+            // Restore physics and re-enable animators
+            if (rbA != null) rbA.bodyType = RigidbodyType2D.Dynamic;
+            if (rbB != null) rbB.bodyType = RigidbodyType2D.Dynamic;
+            if (animA != null) animA.enabled = true;
+            if (animB != null) animB.enabled = true;
 
             rope = FindObjectOfType<RopeSystem>();
             if (rope != null) rope.SetVisible(true);
-            if (pcA != null) pcA.enabled = true;
-            if (pcB != null) pcB.enabled = true;
+            if (pcA != null) pcA.IsRespawning = false;
+            if (pcB != null) pcB.IsRespawning = false;
 
             isRespawning = false;
         }
