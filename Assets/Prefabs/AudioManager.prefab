@@ -59,7 +59,7 @@ MonoBehaviour:
   ropeTautClip: {fileID: 8300000, guid: 035f38f353a094469bdcc5b02f2816c2, type: 3}
   crumbleClip: {fileID: 8300000, guid: 8a6b81a7f318f4bc28c0101a2b55ea2e, type: 3}
   gateOpenClip: {fileID: 8300000, guid: 180319768d7c1417faa3be41020c2e21, type: 3}
-  gateCloseClip: {fileID: 8300000, guid: 551b011867da449e88151c9cf53d96cc, type: 3}
+  gateCloseClip: {fileID: 8300000, guid: 9fdac02d36a9c4f38b740f3e4869d7dc, type: 3}
   stompClip: {fileID: 8300000, guid: 253124601f16349679adfe82fe1bcecd, type: 3}
   bounceClips:
   - {fileID: 8300000, guid: 8011aaaecc32c4d38932716bdfbe5eb8, type: 3}

@@ -47,7 +47,7 @@ Assets/
 `Scripts/E.cs`：事件 ID 常量类，所有跨系统事件名集中在这里：
 
 ```
-ScoreChanged  LevelComplete  GameRestart
+ScoreChanged  LevelComplete
 ```
 
 ### 模块化原则

@@ -65,8 +65,12 @@ namespace CGJ2026
                 moveTween?.Pause();
         }
 
-        void OnPlayerReleased(object _)
+        void OnPlayerReleased(object data)
         {
+            var pc = data as PlayerController;
+            if (pc == null) return;
+            if (anchorZone != null && !anchorZone.bounds.Contains(pc.transform.position)) return;
+
             anchoredCount = Mathf.Max(0, anchoredCount - 1);
             if (anchoredCount == 0)
                 moveTween?.Play();
