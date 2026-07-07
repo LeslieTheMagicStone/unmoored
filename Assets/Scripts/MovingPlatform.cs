@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
 namespace CGJ2026
 {
+    [DefaultExecutionOrder(-50)]
     public class MovingPlatform : MonoBehaviour
     {
         [SerializeField] Transform[] waypoints = new Transform[2];
@@ -13,6 +15,8 @@ namespace CGJ2026
         Tween moveTween;
         int currentIndex;
         int anchoredCount;
+        Vector3 previousPosition;
+        readonly HashSet<PlayerController> riders = new HashSet<PlayerController>();
 
         void Start()
         {
@@ -22,6 +26,7 @@ namespace CGJ2026
                 return;
             }
 
+            previousPosition = transform.position;
             transform.position = waypoints[0].position;
             MoveToNext();
         }
@@ -65,6 +70,33 @@ namespace CGJ2026
             anchoredCount = Mathf.Max(0, anchoredCount - 1);
             if (anchoredCount == 0)
                 moveTween?.Play();
+        }
+
+        void FixedUpdate()
+        {
+            Vector3 delta = transform.position - previousPosition;
+            previousPosition = transform.position;
+
+            riders.RemoveWhere(pc => pc == null);
+            foreach (var pc in riders)
+            {
+                if (pc != null && !pc.IsAnchored && pc.IsGrounded)
+                    pc.Body.position += (Vector2)delta;
+            }
+        }
+
+        void OnCollisionEnter2D(Collision2D collision)
+        {
+            var pc = collision.gameObject.GetComponent<PlayerController>();
+            if (pc != null)
+                riders.Add(pc);
+        }
+
+        void OnCollisionExit2D(Collision2D collision)
+        {
+            var pc = collision.gameObject.GetComponent<PlayerController>();
+            if (pc != null)
+                riders.Remove(pc);
         }
     }
 }
