@@ -108,9 +108,10 @@ namespace CGJ2026
             AudioManager.Instance?.PlayCrumble();
             Juice.ShakeMedium();
 
-            for (int i = anchoredPlayers.Count - 1; i >= 0; i--)
-                anchoredPlayers[i].ReleaseFromSurface();
+            var toRelease = new List<PlayerController>(anchoredPlayers);
             anchoredPlayers.Clear();
+            foreach (var pc in toRelease)
+                pc.ReleaseFromSurface();
 
             Transform t = visualTransform != null ? visualTransform : transform;
             t.DOShakePosition(0.2f, 0.12f, 30, 90);
