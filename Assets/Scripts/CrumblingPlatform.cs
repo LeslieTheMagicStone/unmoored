@@ -127,16 +127,22 @@ namespace CGJ2026
 
         void Respawn()
         {
+            shakeTween?.Kill();
+            shakeTween = null;
+            Transform t = visualTransform != null ? visualTransform : transform;
+            t.DOKill();
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.DOKill();
+                spriteRenderer.enabled = true;
+                spriteRenderer.color = originalColor;
+            }
             broken = false;
             triggered = false;
+            timer = 0f;
             platformCollider.enabled = true;
-            spriteRenderer.enabled = true;
-            spriteRenderer.color = originalColor;
             anchoredPlayers.Clear();
-            if (visualTransform != null)
-                visualTransform.localPosition = originalPos;
-            else
-                transform.localPosition = originalPos;
+            t.localPosition = originalPos;
         }
     }
 }
