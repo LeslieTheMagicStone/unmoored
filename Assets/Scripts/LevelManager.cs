@@ -115,6 +115,10 @@ namespace CGJ2026
             var pcB = playerB != null ? playerB.GetComponent<PlayerController>() : null;
             var rbA = playerA != null ? playerA.GetComponent<Rigidbody2D>() : null;
             var rbB = playerB != null ? playerB.GetComponent<Rigidbody2D>() : null;
+            var animA = playerA != null ? playerA.GetComponent<PlayerAnimator>() : null;
+            var animB = playerB != null ? playerB.GetComponent<PlayerAnimator>() : null;
+            var visA = animA != null ? animA.VisualPivot : null;
+            var visB = animB != null ? animB.VisualPivot : null;
 
             // Freeze players at death position
             var rope = FindObjectOfType<RopeSystem>();
@@ -124,15 +128,15 @@ namespace CGJ2026
             if (rbA != null) { rbA.velocity = Vector2.zero; rbA.bodyType = RigidbodyType2D.Kinematic; }
             if (rbB != null) { rbB.velocity = Vector2.zero; rbB.bodyType = RigidbodyType2D.Kinematic; }
 
-            Vector3 scaleA = playerA != null ? playerA.localScale : Vector3.one;
-            Vector3 scaleB = playerB != null ? playerB.localScale : Vector3.one;
+            Vector3 scaleA = visA != null ? visA.localScale : Vector3.one;
+            Vector3 scaleB = visB != null ? visB.localScale : Vector3.one;
 
-            // Scale down at death point
+            // Scale down visual layer at death point
             float shrinkDuration = respawnAnimDuration * 0.25f;
             var am = AudioManager.Instance;
             if (am != null) am.PlayDeathSound();
-            if (playerA != null) playerA.DOScale(Vector3.zero, shrinkDuration).SetUpdate(true);
-            if (playerB != null) playerB.DOScale(Vector3.zero, shrinkDuration).SetUpdate(true);
+            if (visA != null) visA.DOScale(Vector3.zero, shrinkDuration).SetUpdate(true);
+            if (visB != null) visB.DOScale(Vector3.zero, shrinkDuration).SetUpdate(true);
             yield return new WaitForSecondsRealtime(shrinkDuration);
 
             // Teleport to respawn
@@ -154,10 +158,10 @@ namespace CGJ2026
 
             if (am != null) am.PlayRespawn();
 
-            // Scale back up with overshoot bounce
+            // Scale visual layer back up with overshoot bounce
             float growDuration = respawnAnimDuration * 0.75f;
-            if (playerA != null) playerA.DOScale(scaleA, growDuration).SetEase(Ease.OutBack, 2.5f).SetUpdate(true);
-            if (playerB != null) playerB.DOScale(scaleB, growDuration).SetEase(Ease.OutBack, 2.5f).SetUpdate(true);
+            if (visA != null) visA.DOScale(scaleA, growDuration).SetEase(Ease.OutBack, 2.5f).SetUpdate(true);
+            if (visB != null) visB.DOScale(scaleB, growDuration).SetEase(Ease.OutBack, 2.5f).SetUpdate(true);
             yield return new WaitForSecondsRealtime(growDuration);
 
             rope = FindObjectOfType<RopeSystem>();

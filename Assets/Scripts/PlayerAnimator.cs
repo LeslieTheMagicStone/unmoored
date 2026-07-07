@@ -16,6 +16,8 @@ namespace CGJ2026
         [SerializeField] float wallHangOffsetX = 0f;
 
         SpriteRenderer spriteRenderer;
+        public Transform VisualPivot => visualPivot;
+
         Transform spriteTransform;
         Vector2 spriteDefaultPos;
         float walkTimer;
