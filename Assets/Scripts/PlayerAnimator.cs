@@ -14,6 +14,7 @@ namespace CGJ2026
         [SerializeField] Sprite[] anchorHangSprites;
         [SerializeField] float fps = 12f;
         [SerializeField] float wallHangOffsetX = 0f;
+        [SerializeField] float wallHangOffsetY = 0f;
 
         SpriteRenderer spriteRenderer;
         public Transform VisualPivot => visualPivot;
@@ -80,10 +81,13 @@ namespace CGJ2026
 
                 spriteRenderer.sprite = result;
                 visualPivot.localScale = new Vector3(flip ? -1 : 1, 1, 1);
-                float wx = 0f;
+                float wx = 0f, wy = 0f;
                 if (Mathf.Abs(n.x) > 0.5f)
-                    wx = n.x > 0f ? -wallHangOffsetX : wallHangOffsetX;
-                spriteTransform.localPosition = new Vector2(wx, 0f);
+                {
+                    wx = wallHangOffsetX;
+                    wy = wallHangOffsetY;
+                }
+                spriteTransform.localPosition = new Vector2(wx, wy);
 
 
                 return;

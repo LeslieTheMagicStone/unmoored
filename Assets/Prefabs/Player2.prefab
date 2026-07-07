@@ -283,3 +283,4 @@ MonoBehaviour:
   - {fileID: 21300000, guid: a999437459a714bbe8d4ed2cb84968eb, type: 3}
   fps: 12
   wallHangOffsetX: 1.94
+  wallHangOffsetY: -1.81
