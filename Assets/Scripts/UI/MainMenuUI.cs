@@ -6,6 +6,12 @@ namespace CGJ2026
 {
     public class MainMenuUI : MonoBehaviour
     {
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+                GameManager.QuitGame();
+        }
+
         void Start()
         {
             if (FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)

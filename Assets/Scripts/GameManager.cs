@@ -55,9 +55,6 @@ namespace CGJ2026
         {
             if (timing)
                 elapsedTime += Time.deltaTime;
-
-            if (Input.GetKeyDown(KeyCode.Escape))
-                QuitGame();
         }
 
         public static void QuitGame()

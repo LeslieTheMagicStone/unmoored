@@ -19,6 +19,12 @@ namespace CGJ2026
 
         bool isPaused;
 
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+                TogglePause();
+        }
+
         void Start()
         {
             pausePanel.SetActive(false);
