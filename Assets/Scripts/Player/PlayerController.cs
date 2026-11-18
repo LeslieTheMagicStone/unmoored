@@ -4,9 +4,21 @@ namespace CGJ2026
 {
     public enum CharacterForm { Human, Anchor }
 
+    /// <summary>
+    /// Reads one player's input and drives movement and the human/anchor form switch.
+    ///
+    /// Anchor flow: pressing the anchor key switches to <see cref="CharacterForm.Anchor"/>.
+    /// If an anchorable surface is within reach the player snaps onto it at once;
+    /// otherwise the player falls and attaches on landing. Only an attached player is
+    /// <see cref="IsAnchored"/>: it turns kinematic, becomes the partner's swing pivot,
+    /// and raises <see cref="E.PlayerAnchored"/>. Leaving that state raises
+    /// <see cref="E.PlayerReleased"/>.
+    /// </summary>
     [RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D))]
     public class PlayerController : MonoBehaviour
     {
+        const float AirControlFactor = 0.4f;
+
         [Header("Identity")]
         [SerializeField] int playerIndex = 0;
 
@@ -17,155 +29,108 @@ namespace CGJ2026
         [SerializeField] KeyCode moveLeftKey = KeyCode.A;
         [SerializeField] KeyCode moveRightKey = KeyCode.D;
         [SerializeField] KeyCode jumpKey = KeyCode.W;
-        [SerializeField] KeyCode anchorKey = KeyCode.E;
+        [SerializeField] KeyCode anchorKey = KeyCode.S;
 
         [Header("Physics")]
         [SerializeField] LayerMask groundLayer;
         [SerializeField] LayerMask anchorLayer;
         [SerializeField] float anchorProbeReach = 1.15f;
 
-        CharacterForm form = CharacterForm.Human;
         Rigidbody2D rb;
-        BoxCollider2D col;
+        BoxCollider2D box;
+        RopeSystem rope;
+        GroundProbe groundProbe;
+        AnchorSurfaceProbe anchorProbe;
+
         float moveInput;
         bool jumpPressed;
         bool anchorTogglePressed;
+
+        CharacterForm form = CharacterForm.Human;
+        bool attached;
+        Collider2D anchoredCollider;
+        Vector2 snapNormal;
+
         bool isGrounded;
         bool wasGrounded;
-        float coyoteTimer;
         bool justJumped;
-        Vector2 snapNormal;
-        bool snappedToAnchorPoint;
-        Collider2D anchoredCollider;
-        RopeSystem ropeSystem;
-        readonly RaycastHit2D[] anchorSnapHits = new RaycastHit2D[8];
-        static readonly float[] FootRayOffsets = { 0f, -0.5f, 0.5f, -1.05f, 1.05f };
-        const float FootRayDistance = 0.08f;
-        const float LedgeHorizontalReach = 0.25f;
-        const float WallRayReach = 0.12f;
+        float coyoteTimer;
 
-        public CharacterForm Form => form;
-        public bool IsAnchored => form == CharacterForm.Anchor;
-        public LayerMask GroundLayer => groundLayer;
-        public bool IsGrounded => isGrounded;
-        public bool JustJumped => justJumped;
-        public float VerticalVelocity => rb != null ? rb.velocity.y : 0f;
         public int PlayerIndex => playerIndex;
         public PlayerConfig Config => config;
         public Rigidbody2D Body => rb;
-        public float MoveInput => moveInput;
-        public Vector2 SnapNormal => snapNormal;
-        public bool SnappedToAnchorPoint => snappedToAnchorPoint;
+        public LayerMask GroundLayer => groundLayer;
+
+        public CharacterForm Form => form;
+        /// <summary>True only while attached to terrain. A player in anchor form that is still falling is not anchored.</summary>
+        public bool IsAnchored => attached;
         public Collider2D AnchoredCollider => anchoredCollider;
+        public Vector2 SnapNormal => snapNormal;
+
+        public bool IsGrounded => isGrounded;
+        public bool JustJumped => justJumped;
+        public float MoveInput => moveInput;
+        public float VerticalVelocity => rb.velocity.y;
+
+        /// <summary>Set by <see cref="LevelManager"/> while the respawn animation runs; blocks input and physics logic.</summary>
         public bool IsRespawning { get; set; }
 
-        public void ReleaseFromSurface()
+        /// <summary>Called by <see cref="RopeSystem"/> to connect this player to the rope.</summary>
+        public void BindRope(RopeSystem ropeSystem)
         {
-            ExitAnchorForm(true);
+            if (rope != null && rope != ropeSystem)
+                throw new System.InvalidOperationException($"PlayerController [{playerIndex}] is already bound to another rope");
+            rope = ropeSystem;
+        }
+
+        /// <summary>Drops the anchor because the surface can no longer hold it. Only surfaces call this.</summary>
+        public void DetachFromSurface()
+        {
+            if (IsAnchored)
+                BecomeHuman();
+        }
+
+        /// <summary>Forces human form with zero velocity. Used when respawning.</summary>
+        public void ResetToHuman()
+        {
+            BecomeHuman();
+            coyoteTimer = 0f;
+            ClearBufferedInput();
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
         }
 
         void Awake()
         {
-            rb = GetComponent<Rigidbody2D>();
-            col = GetComponent<BoxCollider2D>();
             if (config == null)
                 throw new System.Exception($"PlayerController [{playerIndex}]: config not assigned");
 
+            rb = GetComponent<Rigidbody2D>();
+            box = GetComponent<BoxCollider2D>();
+            groundProbe = new GroundProbe(box, rb, groundLayer);
+            anchorProbe = new AnchorSurfaceProbe(anchorLayer, anchorProbeReach);
+
             rb.gravityScale = config.GravityScale;
+            rb.mass = config.HumanMass;
             rb.drag = config.HumanDrag;
-            ropeSystem = FindObjectOfType<RopeSystem>();
+        }
+
+        void Start()
+        {
+            if (rope == null)
+                throw new System.Exception($"PlayerController [{playerIndex}]: no RopeSystem is bound to this player");
         }
 
         void Update()
         {
-            if (!IsRespawning) ReadInput();
-        }
-
-
-        void FixedUpdate()
-        {
-            float footY = col.bounds.min.y + 0.01f;
-            float x = col.bounds.center.x;
-            isGrounded = CastFootRays(footY, x, out _);
-
-            if (IsRespawning)
+            // Time.timeScale is 0 while paused. FixedUpdate does not run then, so a key
+            // pressed during pause would otherwise fire the moment the game resumes.
+            if (IsRespawning || Time.timeScale == 0f)
             {
-                wasGrounded = isGrounded;
+                moveInput = 0f;
                 return;
             }
 
-            // if (form == CharacterForm.Human && !isGrounded && Mathf.Abs(moveInput) > 0.1f)
-            //     TryLedgeAssist();
-
-            ConveyorTerrain conveyor = isGrounded ? GetConveyorUnderfoot() : null;
-
-            if (anchorTogglePressed)
-            {
-                anchorTogglePressed = false;
-                ToggleAnchor();
-            }
-
-            if (form == CharacterForm.Anchor)
-            {
-                jumpPressed = false;
-                if (isGrounded && rb.bodyType != RigidbodyType2D.Kinematic)
-                {
-                    rb.bodyType = RigidbodyType2D.Kinematic;
-                    rb.velocity = Vector2.zero;
-                }
-                return;
-            }
-
-            if (isGrounded)
-            {
-                if (!wasGrounded)
-                {
-                    Juice.DustPoof(col.bounds.min);
-                    AudioManager.Instance?.PlayLand();
-                }
-                coyoteTimer = config.CoyoteTime;
-                justJumped = false;
-            }
-            else
-                coyoteTimer -= Time.fixedDeltaTime;
-
-            bool hasGroundControl = isGrounded || coyoteTimer > 0f;
-
-            if (hasGroundControl)
-            {
-                Vector2 carry = conveyor != null ? conveyor.CurrentVelocity : Vector2.zero;
-                float vx = moveInput * config.MoveSpeed + carry.x;
-                float vy = isGrounded && conveyor != null ? carry.y : Mathf.Max(0f, rb.velocity.y);
-                rb.velocity = new Vector2(vx, vy);
-                if (Mathf.Abs(moveInput) > 0.1f)
-                    AudioManager.Instance?.PlayWalk();
-            }
-            else if (moveInput != 0f)
-            {
-                bool canSwing = ropeSystem != null && ropeSystem.TryApplySwingInput(this, moveInput);
-                if (!canSwing)
-                    ApplyAirControl();
-            }
-            if (jumpPressed && coyoteTimer > 0f)
-            {
-                jumpPressed = false;
-                coyoteTimer = 0f;
-                justJumped = true;
-                rb.AddForce(Vector2.up * config.JumpForce, ForceMode2D.Impulse);
-                AudioManager.Instance?.PlayJump();
-            }
-            else if (jumpPressed)
-            {
-                jumpPressed = false;
-                if (!isGrounded)
-                    TryWallJump();
-            }
-
-            wasGrounded = isGrounded;
-        }
-
-        void ReadInput()
-        {
             float h = 0f;
             if (Input.GetKey(moveLeftKey)) h -= 1f;
             if (Input.GetKey(moveRightKey)) h += 1f;
@@ -175,215 +140,183 @@ namespace CGJ2026
             if (Input.GetKeyDown(anchorKey)) anchorTogglePressed = true;
         }
 
+        void FixedUpdate()
+        {
+            isGrounded = groundProbe.TryGetGround(out RaycastHit2D groundHit);
+
+            if (IsRespawning)
+            {
+                ClearBufferedInput();
+                wasGrounded = isGrounded;
+                return;
+            }
+
+            if (anchorTogglePressed)
+            {
+                anchorTogglePressed = false;
+                ToggleAnchor();
+            }
+
+            if (form == CharacterForm.Anchor)
+                TickAnchorForm(groundHit);
+            else
+                TickHumanForm(groundHit);
+
+            wasGrounded = isGrounded;
+        }
+
+        void ClearBufferedInput()
+        {
+            jumpPressed = false;
+            anchorTogglePressed = false;
+        }
+
         void ToggleAnchor()
         {
             if (form == CharacterForm.Anchor)
             {
-                ExitAnchorForm(true);
+                BecomeHuman();
                 return;
             }
 
-            TrySnapToSurface();
             EnterAnchorForm();
+
+            if (anchorProbe.TryFind(box.bounds, out AnchorSurface surface))
+            {
+                rb.position = surface.SnapPosition;
+                AttachTo(surface.Collider, surface.Normal);
+                AudioManager.Instance.PlayAnchorSnap();
+                Juice.ShakeLight();
+            }
         }
 
-        public void ResetToHuman()
+        void TickAnchorForm(RaycastHit2D groundHit)
         {
-            bool wasAnchored = form == CharacterForm.Anchor;
-            coyoteTimer = 0f;
             jumpPressed = false;
-            RestoreHumanState(wasAnchored);
-            rb.velocity = Vector2.zero;
-            rb.angularVelocity = 0f;
+
+            if (IsAnchored)
+            {
+                // The surface vanished (e.g. a crumbling platform broke): lose the pivot.
+                if (!IsUsableSurface(anchoredCollider))
+                    BecomeHuman();
+                return;
+            }
+
+            // Anchor form in the air just falls under gravity; it attaches on landing.
+            if (isGrounded)
+                AttachTo(groundHit.collider, groundHit.normal);
+        }
+
+        void TickHumanForm(RaycastHit2D groundHit)
+        {
+            if (isGrounded)
+            {
+                if (!wasGrounded)
+                {
+                    Juice.DustPoof(box.bounds.min);
+                    AudioManager.Instance.PlayLand();
+                }
+                coyoteTimer = config.CoyoteTime;
+                justJumped = false;
+            }
+            else
+            {
+                coyoteTimer -= Time.fixedDeltaTime;
+            }
+
+            bool hasGroundControl = isGrounded || coyoteTimer > 0f;
+            if (hasGroundControl)
+                ApplyGroundMovement(isGrounded ? groundHit.collider.GetComponentInParent<ConveyorTerrain>() : null);
+            else if (moveInput != 0f && !rope.TryApplySwingInput(this, moveInput))
+                ApplyAirControl();
+
+            if (!jumpPressed)
+                return;
+
+            jumpPressed = false;
+            if (coyoteTimer > 0f)
+                Jump();
+            else
+                TryWallJump();
+        }
+
+        void ApplyGroundMovement(ConveyorTerrain conveyor)
+        {
+            Vector2 carry = conveyor != null ? conveyor.CurrentVelocity : Vector2.zero;
+            float vx = moveInput * config.MoveSpeed + carry.x;
+            float vy = conveyor != null ? carry.y : Mathf.Max(0f, rb.velocity.y);
+            rb.velocity = new Vector2(vx, vy);
+
+            if (isGrounded && moveInput != 0f)
+                AudioManager.Instance.PlayWalk();
+        }
+
+        void ApplyAirControl()
+        {
+            rb.AddForce(config.SwingForce * AirControlFactor * Mathf.Sign(moveInput) * Vector2.right, ForceMode2D.Force);
+        }
+
+        void Jump()
+        {
+            coyoteTimer = 0f;
+            justJumped = true;
+            rb.AddForce(Vector2.up * config.JumpForce, ForceMode2D.Impulse);
+            AudioManager.Instance.PlayJump();
+        }
+
+        void TryWallJump()
+        {
+            int wallDir = groundProbe.FindAdjacentWall();
+            if (wallDir == 0)
+                return;
+
+            rb.velocity = new Vector2(rb.velocity.x, 0f);
+            rb.AddForce(new Vector2(-wallDir * config.WallJumpHorizontalForce, config.JumpForce), ForceMode2D.Impulse);
+            justJumped = true;
+            AudioManager.Instance.PlayJump();
         }
 
         void EnterAnchorForm()
         {
             form = CharacterForm.Anchor;
-            jumpPressed = false;
+            ClearBufferedInput();
             coyoteTimer = 0f;
             rb.angularVelocity = 0f;
             rb.mass = config.AnchorMass;
             rb.drag = config.AnchorDrag;
+        }
+
+        void AttachTo(Collider2D surface, Vector2 normal)
+        {
+            attached = true;
+            anchoredCollider = surface;
+            snapNormal = normal;
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.bodyType = RigidbodyType2D.Kinematic;
             EventBus.Emit(E.PlayerAnchored, this);
         }
 
-        void TrySnapToSurface()
+        void BecomeHuman()
         {
-            anchoredCollider = null;
-            Bounds b = col.bounds;
-            Vector2 center = b.center;
-            float halfH = b.extents.y;
-            float reach = (b.extents.x + halfH) * anchorProbeReach;
+            bool wasAnchored = IsAnchored;
 
-            Vector2[] directions = { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
-            Vector2 bestPoint = Vector2.zero;
-            Vector2 bestNormal = Vector2.zero;
-            Collider2D bestCollider = null;
-            float bestDist = float.MaxValue;
-
-            for (int i = 0; i < 4; i++)
-            {
-                Vector2 dir = directions[i];
-                int n = Physics2D.RaycastNonAlloc(center, dir, anchorSnapHits, reach, anchorLayer);
-                for (int j = 0; j < n; j++)
-                {
-                    float d = anchorSnapHits[j].distance;
-                    if (d > 0.001f && d < bestDist)
-                    {
-                        bestDist = d;
-                        Vector2 surfacePoint = anchorSnapHits[j].point;
-                        Vector2 normal = anchorSnapHits[j].normal;
-                        bestPoint = surfacePoint + normal * halfH * 1.15f;
-                        bestNormal = normal;
-                        bestCollider = anchorSnapHits[j].collider;
-                    }
-                }
-            }
-
-            if (bestDist >= float.MaxValue) return;
-
-            snapNormal = bestNormal;
-            snappedToAnchorPoint = bestCollider != null && bestCollider.GetComponent<AnchorPoint>() != null;
-            anchoredCollider = bestCollider;
-            rb.position = bestPoint;
-            rb.velocity = Vector2.zero;
-            rb.bodyType = RigidbodyType2D.Kinematic;
-            AudioManager.Instance?.PlayAnchorSnap();
-            Juice.ShakeLight();
-        }
-
-        void ExitAnchorForm(bool emitEvent)
-        {
-            if (form == CharacterForm.Human) return;
-            RestoreHumanState(emitEvent);
-        }
-
-        void RestoreHumanState(bool wasAnchored)
-        {
             form = CharacterForm.Human;
+            attached = false;
+            anchoredCollider = null;
+            snapNormal = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.mass = config.HumanMass;
             rb.drag = config.HumanDrag;
             rb.gravityScale = config.GravityScale;
-            snapNormal = Vector2.zero;
-            snappedToAnchorPoint = false;
-            anchoredCollider = null;
+
             if (wasAnchored)
                 EventBus.Emit(E.PlayerReleased, this);
         }
 
-        void ApplyAirControl()
+        static bool IsUsableSurface(Collider2D surface)
         {
-            rb.AddForce(config.SwingForce * 0.4f * Mathf.Sign(moveInput) * Vector2.right, ForceMode2D.Force);
-        }
-
-        public ConveyorTerrain GetConveyorUnderfoot()
-        {
-            float footY = col.bounds.min.y + 0.01f;
-            float x = col.bounds.center.x;
-
-            if (!CastFootRays(footY, x, out RaycastHit2D hit))
-                return null;
-
-            return hit.collider.GetComponentInParent<ConveyorTerrain>();
-        }
-
-        bool CastFootRays(float footY, float centerX, out RaycastHit2D hit)
-        {
-            float halfW = col.bounds.extents.x;
-            for (int i = 0; i < FootRayOffsets.Length; i++)
-            {
-                hit = Physics2D.Raycast(
-                    new Vector2(centerX + FootRayOffsets[i] * halfW, footY),
-                    Vector2.down,
-                    FootRayDistance,
-                    groundLayer);
-                if (hit.collider != null && hit.normal.y > 0.5f && rb.velocity.y <= 0.1f)
-                    return true;
-            }
-
-            hit = default;
-            return false;
-        }
-
-        int CheckWall()
-        {
-            Bounds b = col.bounds;
-            float h = b.size.y * 0.7f;
-            float topY = b.max.y - 0.05f;
-            float botY = b.min.y + 0.05f;
-            float sideX = b.center.x;
-
-            for (int dir = -1; dir <= 1; dir += 2)
-            {
-                Vector2 origin = new Vector2(sideX + dir * (b.extents.x + 0.02f), topY);
-                var hit = Physics2D.Raycast(origin, Vector2.right * dir, WallRayReach, groundLayer);
-                if (hit.collider != null) return dir;
-
-                origin.y = b.center.y;
-                hit = Physics2D.Raycast(origin, Vector2.right * dir, WallRayReach, groundLayer);
-                if (hit.collider != null) return dir;
-
-                origin.y = botY;
-                hit = Physics2D.Raycast(origin, Vector2.right * dir, WallRayReach, groundLayer);
-                if (hit.collider != null) return dir;
-            }
-
-            return 0;
-        }
-
-        void TryWallJump()
-        {
-            int wallDir = CheckWall();
-            if (wallDir == 0) return;
-
-            float vx = -wallDir * config.WallJumpHorizontalForce;
-            float vy = config.JumpForce;
-            rb.velocity = new Vector2(rb.velocity.x, 0f);
-            rb.AddForce(new Vector2(vx, vy), ForceMode2D.Impulse);
-            justJumped = true;
-            AudioManager.Instance?.PlayJump();
-        }
-
-        void TryLedgeAssist()
-        {
-            bool isSwinging = ropeSystem != null && ropeSystem.IsTaut() && form == CharacterForm.Human && !isGrounded;
-            if (!isSwinging) return;
-
-            Bounds b = col.bounds;
-            float dir = Mathf.Sign(moveInput);
-            float extX = b.extents.x;
-
-            Vector2[] origins =
-            {
-                new(b.center.x + dir * extX, b.center.y),
-                new(b.center.x + dir * extX, b.max.y - 0.05f)
-            };
-
-            foreach (var origin in origins)
-            {
-                var hit = Physics2D.Raycast(origin, Vector2.right * dir, LedgeHorizontalReach, groundLayer);
-                if (hit.collider == null) continue;
-
-                float ledgeY = hit.collider.bounds.max.y;
-                float footY = b.min.y;
-                float gap = ledgeY - footY;
-
-                if (gap < 0f || gap > config.LedgeAssistHeight) continue;
-                if (ledgeY > b.max.y) continue;
-
-                float checkX = hit.point.x + dir * 0.1f;
-                var ceiling = Physics2D.Raycast(
-                    new Vector2(checkX, ledgeY + 0.02f),
-                    Vector2.up, b.size.y, groundLayer);
-                if (ceiling.collider != null) continue;
-
-                rb.position = new Vector2(rb.position.x, ledgeY + b.extents.y + 0.01f);
-                if (rb.velocity.y < 0f)
-                    rb.velocity = new Vector2(rb.velocity.x, 0f);
-                break;
-            }
+            return surface != null && surface.enabled && surface.gameObject.activeInHierarchy;
         }
     }
 }

@@ -18,10 +18,10 @@ namespace CGJ2026
 
         [SerializeField] Transform scaleRoot;
 
-        SpriteRenderer spriteRenderer;
         public Transform VisualPivot => visualPivot;
         public Transform ScaleRoot => scaleRoot;
 
+        SpriteRenderer spriteRenderer;
         Transform spriteTransform;
         Vector2 spriteDefaultPos;
         float walkTimer;
@@ -33,6 +33,8 @@ namespace CGJ2026
 
         void Awake()
         {
+            if (controller == null)
+                throw new System.Exception("PlayerAnimator: missing controller");
             if (visualPivot == null)
                 throw new System.Exception("PlayerAnimator: missing visualPivot");
             spriteRenderer = visualPivot.GetComponentInChildren<SpriteRenderer>();
@@ -47,7 +49,6 @@ namespace CGJ2026
             bool isGrounded = controller.IsGrounded;
 
             Sprite result;
-            bool flip = false;
             if (controller.Form == CharacterForm.Anchor)
             {
                 Vector2 n = controller.SnapNormal;
@@ -79,9 +80,7 @@ namespace CGJ2026
                     hangTimer = 0f;
                 }
 
-                if (n.x > 0.5f)
-                    flip = true;
-
+                bool flip = n.x > 0.5f;
                 spriteRenderer.sprite = result;
                 visualPivot.localScale = new Vector3(flip ? -1 : 1, 1, 1);
                 float wx = 0f, wy = 0f;
@@ -91,8 +90,6 @@ namespace CGJ2026
                     wy = wallHangOffsetY;
                 }
                 spriteTransform.localPosition = new Vector2(wx, wy);
-
-
                 return;
             }
 
@@ -138,9 +135,7 @@ namespace CGJ2026
             }
 
             spriteRenderer.sprite = result;
-            if (controller.Form == CharacterForm.Anchor)
-                visualPivot.localScale = new Vector3(flip ? -1 : 1, 1, 1);
-            else if (controller.MoveInput != 0f)
+            if (controller.MoveInput != 0f)
                 visualPivot.localScale = new Vector3(controller.MoveInput < 0f ? -1 : 1, 1, 1);
         }
     }
