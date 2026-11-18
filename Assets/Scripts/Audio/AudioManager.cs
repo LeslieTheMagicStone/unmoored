@@ -5,7 +5,7 @@ namespace CGJ2026
 {
     /// <summary>
     /// Persistent sound player. Gameplay code calls the Play methods directly;
-    /// anchor, release, death and checkpoint sounds come from EventBus events.
+    /// death and checkpoint sounds come from EventBus events.
     /// </summary>
     public class AudioManager : MonoBehaviour
     {
@@ -140,16 +140,12 @@ namespace CGJ2026
             // A duplicate copy is already scheduled for destruction in Awake; keep it off the bus.
             if (Instance != this)
                 return;
-            EventBus.On(E.PlayerAnchored, OnAnchor);
-            EventBus.On(E.PlayerReleased, OnRelease);
             EventBus.On(E.PlayerFell, OnDeath);
             EventBus.On(E.CheckpointReached, OnCheckpoint);
         }
 
         void OnDisable()
         {
-            EventBus.Off(E.PlayerAnchored, OnAnchor);
-            EventBus.Off(E.PlayerReleased, OnRelease);
             EventBus.Off(E.PlayerFell, OnDeath);
             EventBus.Off(E.CheckpointReached, OnCheckpoint);
         }
@@ -180,8 +176,6 @@ namespace CGJ2026
         public void StartGateCloseLoop() => StartLoop(gateCloseClip);
         public void StopGateLoop() => loopSource.Stop();
 
-        void OnAnchor(object _) => Play(anchorClip);
-        void OnRelease(object _) => Play(releaseClip);
         void OnDeath(object _) => Play(deathClip);
         void OnCheckpoint(object _) => Play(checkpointClip);
 

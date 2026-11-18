@@ -284,6 +284,8 @@ namespace CGJ2026
             rb.angularVelocity = 0f;
             rb.mass = config.AnchorMass;
             rb.drag = config.AnchorDrag;
+            // Feedback on the press itself, even when nothing is in reach and the player just falls.
+            AudioManager.Instance.PlayAnchorToggle(true);
         }
 
         void AttachTo(Collider2D surface, Vector2 normal)
@@ -300,6 +302,8 @@ namespace CGJ2026
         void BecomeHuman()
         {
             bool wasAnchored = IsAnchored;
+            if (form == CharacterForm.Anchor)
+                AudioManager.Instance.PlayAnchorToggle(false);
 
             form = CharacterForm.Human;
             attached = false;
