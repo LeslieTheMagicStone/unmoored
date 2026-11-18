@@ -4,6 +4,10 @@ using UnityEngine.UI;
 
 namespace CGJ2026
 {
+    /// <summary>
+    /// Start screen (also used as the GameOver retry screen): both players press their
+    /// anchor key to start, mirroring the in-game "both anchor" checkpoint rule.
+    /// </summary>
     public class MainMenuAnchorPrompt : MonoBehaviour
     {
         [SerializeField] Image p1Image;
@@ -29,6 +33,20 @@ namespace CGJ2026
         bool p2Anchored;
         bool starting;
 
+        void Awake()
+        {
+            Object[] required =
+            {
+                p1Image, p1Inactive, p1Active, p2Image, p2Inactive, p2Active,
+                p1KeyImage, p1KeyInactive, p1KeyActive, p2KeyImage, p2KeyInactive, p2KeyActive
+            };
+            foreach (var o in required)
+            {
+                if (o == null)
+                    throw new System.Exception("MainMenuAnchorPrompt: every image and sprite must be assigned");
+            }
+        }
+
         void Start()
         {
             ApplyState(p1Image, p1Inactive);
@@ -46,10 +64,7 @@ namespace CGJ2026
                 p1Anchored = !p1Anchored;
                 ApplyState(p1Image, p1Anchored ? p1Active : p1Inactive);
                 ApplyState(p1KeyImage, p1Anchored ? p1KeyActive : p1KeyInactive);
-                if (p1Anchored)
-                    EventBus.Emit(E.PlayerAnchored, this);
-                else
-                    EventBus.Emit(E.PlayerReleased, this);
+                AudioManager.Instance.PlayAnchorToggle(p1Anchored);
             }
 
             if (Input.GetKeyDown(p2AnchorKey))
@@ -57,10 +72,7 @@ namespace CGJ2026
                 p2Anchored = !p2Anchored;
                 ApplyState(p2Image, p2Anchored ? p2Active : p2Inactive);
                 ApplyState(p2KeyImage, p2Anchored ? p2KeyActive : p2KeyInactive);
-                if (p2Anchored)
-                    EventBus.Emit(E.PlayerAnchored, this);
-                else
-                    EventBus.Emit(E.PlayerReleased, this);
+                AudioManager.Instance.PlayAnchorToggle(p2Anchored);
             }
 
             if (p1Anchored && p2Anchored)
@@ -70,9 +82,8 @@ namespace CGJ2026
             }
         }
 
-        void ApplyState(Image img, Sprite sprite)
+        static void ApplyState(Image img, Sprite sprite)
         {
-            if (img == null || sprite == null) return;
             img.sprite = sprite;
             img.SetNativeSize();
         }
@@ -80,8 +91,7 @@ namespace CGJ2026
         IEnumerator StartGameSequence()
         {
             yield return new WaitForSecondsRealtime(startDelay);
-            if (GameManager.Instance != null)
-                GameManager.Instance.LoadGame();
+            GameManager.Instance.LoadGame();
         }
     }
 }

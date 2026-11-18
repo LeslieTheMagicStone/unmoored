@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 namespace CGJ2026
 {
+    /// <summary>ESC / on-screen pause menu for the Game scene: resume, restart from checkpoint, back to menu.</summary>
     public class PauseUI : MonoBehaviour
     {
         [SerializeField] GameObject pausePanel;
@@ -19,10 +20,10 @@ namespace CGJ2026
 
         bool isPaused;
 
-        void Update()
+        void Awake()
         {
-            if (Input.GetKeyDown(KeyCode.Escape))
-                TogglePause();
+            if (pausePanel == null || pauseBtn == null || resumeBtn == null || restartBtn == null || menuBtn == null)
+                throw new System.Exception("PauseUI: panel and all four buttons must be assigned");
         }
 
         void Start()
@@ -40,6 +41,12 @@ namespace CGJ2026
             AddHoverAnim(menuBtn);
         }
 
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+                TogglePause();
+        }
+
         void TogglePause()
         {
             if (isPaused) Resume();
@@ -50,35 +57,31 @@ namespace CGJ2026
         {
             isPaused = true;
             pausePanel.SetActive(true);
-            if (pauseBtn != null) pauseBtn.gameObject.SetActive(false);
+            pauseBtn.gameObject.SetActive(false);
             Time.timeScale = 0f;
-            AudioManager.Instance?.PlayPause();
-            AudioManager.Instance?.SetMusicLowPass(true);
+            AudioManager.Instance.PlayPause();
+            AudioManager.Instance.SetMusicLowPass(true);
         }
 
         void Resume()
         {
             isPaused = false;
             pausePanel.SetActive(false);
-            if (pauseBtn != null) pauseBtn.gameObject.SetActive(true);
+            pauseBtn.gameObject.SetActive(true);
             Time.timeScale = 1f;
-            AudioManager.Instance?.SetMusicLowPass(false);
+            AudioManager.Instance.SetMusicLowPass(false);
         }
 
         void Restart()
         {
-            isPaused = false;
-            pausePanel.SetActive(false);
-            Time.timeScale = 1f;
-            AudioManager.Instance?.SetMusicLowPass(false);
-            LevelManager.Instance?.RespawnPlayers();
+            Resume();
+            LevelManager.Instance.RespawnPlayers();
         }
 
         void GoToMenu()
         {
-            Time.timeScale = 1f;
-            AudioManager.Instance?.SetMusicLowPass(false);
-            GameManager.Instance?.LoadMainMenu();
+            Resume();
+            GameManager.Instance.LoadMainMenu();
         }
 
         void OnDisable()
@@ -88,14 +91,13 @@ namespace CGJ2026
 
         void AddHoverAnim(Button btn)
         {
-            if (btn == null) return;
             var t = btn.transform;
             bool isHovered = false;
 
             AddTrigger(btn, EventTriggerType.PointerEnter, _ =>
             {
                 isHovered = true;
-                AudioManager.Instance?.PlayUIHover();
+                AudioManager.Instance.PlayUIHover();
                 t.DOScale(hoverScale, animDuration).SetUpdate(true);
             });
 
@@ -112,7 +114,7 @@ namespace CGJ2026
 
             AddTrigger(btn, EventTriggerType.PointerUp, _ =>
             {
-                AudioManager.Instance?.PlayUIClick();
+                AudioManager.Instance.PlayUIClick();
                 t.DOScale(isHovered ? hoverScale : 1f, animDuration).SetUpdate(true);
             });
         }

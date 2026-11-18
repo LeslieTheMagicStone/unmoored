@@ -6,8 +6,10 @@ using UnityEngine.Video;
 
 namespace CGJ2026
 {
+    /// <summary>
     /// Plays a VideoClip as intro, then loads the next scene.
     /// After skipDelay seconds, any key press skips the video and transitions immediately.
+    /// </summary>
     public class MainMenuIntro : MonoBehaviour
     {
         [Header("Scene")]
@@ -66,18 +68,13 @@ namespace CGJ2026
 
         void CreateVideoPlayer()
         {
+            if (videoClip == null)
+                throw new System.Exception("MainMenuIntro: videoClip not assigned");
+
             player = gameObject.AddComponent<VideoPlayer>();
             player.playOnAwake = false;
-
-            if (videoClip != null)
-            {
-                player.clip = videoClip;
-                rt = new RenderTexture((int)videoClip.width, (int)videoClip.height, 0);
-            }
-            else
-            {
-                rt = new RenderTexture(1920, 1080, 0);
-            }
+            player.clip = videoClip;
+            rt = new RenderTexture((int)videoClip.width, (int)videoClip.height, 0);
 
             player.targetTexture = rt;
             player.renderMode = VideoRenderMode.RenderTexture;
@@ -96,7 +93,7 @@ namespace CGJ2026
 
         IEnumerator EnableSkip()
         {
-            yield return new WaitForSeconds(skipDelay);
+            yield return new WaitForSecondsRealtime(skipDelay);
             canSkip = true;
         }
 
@@ -114,7 +111,7 @@ namespace CGJ2026
             float elapsed = 0f;
             while (elapsed < fadeDuration)
             {
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 var c = display.color;
                 c.a = Mathf.Lerp(1f, 0f, elapsed / fadeDuration);
                 display.color = c;

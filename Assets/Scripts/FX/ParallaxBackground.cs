@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace CGJ2026
 {
+    /// <summary>Moves a background layer by a fraction of the camera's movement to fake depth.</summary>
     [ExecuteAlways]
     public class ParallaxBackground : MonoBehaviour
     {
@@ -14,7 +15,7 @@ namespace CGJ2026
 
         void Start()
         {
-            snap();
+            Snap();
         }
 
         void LateUpdate()
@@ -28,10 +29,10 @@ namespace CGJ2026
         void OnValidate()
         {
             if (!Application.isPlaying)
-                snap();
+                Snap();
         }
 
-        void snap()
+        void Snap()
         {
             var cam = camTransform ? camTransform : Camera.main ? Camera.main.transform : null;
             if (cam == null) return;

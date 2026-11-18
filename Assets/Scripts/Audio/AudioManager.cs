@@ -3,6 +3,10 @@ using UnityEngine;
 
 namespace CGJ2026
 {
+    /// <summary>
+    /// Persistent sound player. Gameplay code calls the Play methods directly;
+    /// anchor, release, death and checkpoint sounds come from EventBus events.
+    /// </summary>
     public class AudioManager : MonoBehaviour
     {
         [Header("Movement")]
@@ -37,7 +41,7 @@ namespace CGJ2026
         [SerializeField] AudioClip musicTrack;
         [SerializeField, Range(0f, 1f)] float musicVolume = 0.5f;
 
-        AudioSource source;
+        AudioSource walkSource;
         AudioSource oneShotSource;
         AudioSource loopSource;
         AudioSource musicSource;
@@ -61,24 +65,16 @@ namespace CGJ2026
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            source = gameObject.AddComponent<AudioSource>();
-            source.playOnAwake = false;
-            source.spatialBlend = 0f;
+            ValidateClips();
 
-            oneShotSource = gameObject.AddComponent<AudioSource>();
-            oneShotSource.playOnAwake = false;
-            oneShotSource.spatialBlend = 0f;
-
-            loopSource = gameObject.AddComponent<AudioSource>();
-            loopSource.playOnAwake = false;
-            loopSource.spatialBlend = 0f;
+            walkSource = CreateSource(gameObject);
+            oneShotSource = CreateSource(gameObject);
+            loopSource = CreateSource(gameObject);
             loopSource.loop = true;
 
             var musicGo = new GameObject("MusicSource");
             musicGo.transform.SetParent(transform);
-            musicSource = musicGo.AddComponent<AudioSource>();
-            musicSource.playOnAwake = false;
-            musicSource.spatialBlend = 0f;
+            musicSource = CreateSource(musicGo);
             musicSource.loop = true;
             musicSource.volume = 0f;
 
@@ -90,9 +86,19 @@ namespace CGJ2026
                 PlayMusic();
         }
 
+        static AudioSource CreateSource(GameObject host)
+        {
+            var src = host.AddComponent<AudioSource>();
+            src.playOnAwake = false;
+            src.spatialBlend = 0f;
+            return src;
+        }
+
         public void PlayMusic(float fadeDuration = 2f)
         {
-            if (musicTrack == null) return;
+            if (musicTrack == null)
+                throw new System.InvalidOperationException("AudioManager: no music track assigned");
+            musicSource.DOKill();
             musicSource.clip = musicTrack;
             musicSource.Play();
             musicSource.DOFade(musicVolume, fadeDuration).SetUpdate(true);
@@ -100,24 +106,27 @@ namespace CGJ2026
 
         public void StopMusic(float fadeDuration = 1f)
         {
+            musicSource.DOKill();
             musicSource.DOFade(0f, fadeDuration).SetUpdate(true).OnComplete(() => musicSource.Stop());
         }
 
+        /// <summary>Muffles the music (used by the pause menu) or opens it back up.</summary>
         public void SetMusicLowPass(bool enabled)
         {
+            DOTween.Kill(musicLowPass);
             if (enabled)
             {
                 musicLowPass.enabled = true;
                 musicLowPass.lowpassResonanceQ = LowPassResonance;
                 DOTween.To(() => musicLowPass.cutoffFrequency,
                     x => musicLowPass.cutoffFrequency = x,
-                    LowPassCutoffMuffled, LowPassTransitionDuration).SetUpdate(true);
+                    LowPassCutoffMuffled, LowPassTransitionDuration).SetTarget(musicLowPass).SetUpdate(true);
             }
             else
             {
                 DOTween.To(() => musicLowPass.cutoffFrequency,
                     x => musicLowPass.cutoffFrequency = x,
-                    LowPassCutoffOpen, LowPassTransitionDuration).SetUpdate(true)
+                    LowPassCutoffOpen, LowPassTransitionDuration).SetTarget(musicLowPass).SetUpdate(true)
                     .OnComplete(() =>
                     {
                         musicLowPass.enabled = false;
@@ -128,6 +137,9 @@ namespace CGJ2026
 
         void OnEnable()
         {
+            // A duplicate copy is already scheduled for destruction in Awake; keep it off the bus.
+            if (Instance != this)
+                return;
             EventBus.On(E.PlayerAnchored, OnAnchor);
             EventBus.On(E.PlayerReleased, OnRelease);
             EventBus.On(E.PlayerFell, OnDeath);
@@ -144,61 +156,81 @@ namespace CGJ2026
 
         public void PlayWalk()
         {
-            if (walkClips == null || walkClips.Length == 0) return;
-            if (source.isPlaying) return;
+            if (walkSource.isPlaying)
+                return;
             walkIndex = (walkIndex + 1) % walkClips.Length;
-            source.pitch = Random.Range(0.95f, 1.05f);
-            source.PlayOneShot(walkClips[walkIndex]);
+            walkSource.pitch = Random.Range(0.95f, 1.05f);
+            walkSource.PlayOneShot(walkClips[walkIndex]);
         }
 
-        public void PlayJump() => oneShotSource.PlayOneShot(jumpClip);
+        public void PlayLand() => PlayVaried(landClips[Random.Range(0, landClips.Length)]);
+        public void PlayBounce() => PlayVaried(bounceClips[Random.Range(0, bounceClips.Length)]);
+        public void PlayJump() => Play(jumpClip);
+        public void PlayCrumble() => Play(crumbleClip);
+        public void PlayStomp() => Play(stompClip);
+        public void PlayRopeTaut() => Play(ropeTautClip);
+        public void PlayAnchorSnap() => Play(anchorSnapClip);
+        public void PlayAnchorToggle(bool anchored) => Play(anchored ? anchorClip : releaseClip);
+        public void PlayPause() => Play(pauseClip);
+        public void PlayUIClick() => Play(uiClickClip);
+        public void PlayUIHover() => Play(uiHoverClip);
+        public void PlayRespawn() => Play(respawnClip);
 
-        public void PlayLand()
+        public void StartGateOpenLoop() => StartLoop(gateOpenClip);
+        public void StartGateCloseLoop() => StartLoop(gateCloseClip);
+        public void StopGateLoop() => loopSource.Stop();
+
+        void OnAnchor(object _) => Play(anchorClip);
+        void OnRelease(object _) => Play(releaseClip);
+        void OnDeath(object _) => Play(deathClip);
+        void OnCheckpoint(object _) => Play(checkpointClip);
+
+        void Play(AudioClip clip)
         {
-            if (landClips == null || landClips.Length == 0) return;
-            var c = landClips[Random.Range(0, landClips.Length)];
-            oneShotSource.pitch = Random.Range(0.9f, 1.1f);
-            oneShotSource.PlayOneShot(c);
+            oneShotSource.pitch = 1f;
+            oneShotSource.PlayOneShot(clip);
         }
 
-        public void PlayCrumble() => oneShotSource.PlayOneShot(crumbleClip);
-        public void PlayStomp() => oneShotSource.PlayOneShot(stompClip);
-        public void PlayBounce()
+        void PlayVaried(AudioClip clip)
         {
-            if (bounceClips == null || bounceClips.Length == 0) return;
-            var clip = bounceClips[Random.Range(0, bounceClips.Length)];
             oneShotSource.pitch = Random.Range(0.9f, 1.1f);
             oneShotSource.PlayOneShot(clip);
         }
-        public void StartGateOpenLoop() { loopSource.clip = gateOpenClip; loopSource.Play(); }
-        public void StartGateCloseLoop() { loopSource.clip = gateCloseClip; loopSource.Play(); }
-        public void StopGateLoop() => loopSource.Stop();
-        public void PlayRopeTaut() => oneShotSource.PlayOneShot(ropeTautClip);
-        public void PlayAnchorSnap() => oneShotSource.PlayOneShot(anchorSnapClip);
-        public void PlayPause() => oneShotSource.PlayOneShot(pauseClip);
-        public void PlayUIClick() => oneShotSource.PlayOneShot(uiClickClip);
-        public void PlayUIHover() => oneShotSource.PlayOneShot(uiHoverClip);
-        public void PlayDeathSound() => oneShotSource.PlayOneShot(deathClip);
-        public void PlayRespawn() => oneShotSource.PlayOneShot(respawnClip);
 
-        void OnAnchor(object _)
+        void StartLoop(AudioClip clip)
         {
-            oneShotSource.pitch = 1f;
-            oneShotSource.PlayOneShot(anchorClip);
+            loopSource.clip = clip;
+            loopSource.Play();
         }
 
-        void OnRelease(object _)
+        void ValidateClips()
         {
-            oneShotSource.pitch = 1f;
-            oneShotSource.PlayOneShot(releaseClip);
+            AudioClip[] singles =
+            {
+                jumpClip, anchorClip, anchorSnapClip, releaseClip, ropeTautClip, crumbleClip,
+                gateOpenClip, gateCloseClip, stompClip, deathClip, respawnClip, checkpointClip,
+                pauseClip, uiClickClip, uiHoverClip
+            };
+            foreach (var clip in singles)
+            {
+                if (clip == null)
+                    throw new System.Exception("AudioManager: a sound effect clip is not assigned");
+            }
+
+            RequireClips(walkClips, nameof(walkClips));
+            RequireClips(landClips, nameof(landClips));
+            RequireClips(bounceClips, nameof(bounceClips));
         }
 
-        void OnDeath(object _) => oneShotSource.PlayOneShot(deathClip);
-
-        void OnCheckpoint(object _)
+        static void RequireClips(AudioClip[] clips, string field)
         {
-            oneShotSource.pitch = 1f;
-            oneShotSource.PlayOneShot(checkpointClip);
+            if (clips == null || clips.Length == 0)
+                throw new System.Exception($"AudioManager: {field} is empty");
+            foreach (var clip in clips)
+            {
+                if (clip == null)
+                    throw new System.Exception($"AudioManager: {field} has an empty slot");
+            }
         }
     }
 }

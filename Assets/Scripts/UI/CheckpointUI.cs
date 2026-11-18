@@ -3,6 +3,7 @@ using UnityEngine.UI;
 
 namespace CGJ2026
 {
+    /// <summary>Shows which players are anchored at a checkpoint, then a brief "saved" state.</summary>
     public class CheckpointUI : MonoBehaviour
     {
         [Header("Sprites")]
@@ -22,17 +23,21 @@ namespace CGJ2026
 
         float targetAlpha;
 
+        void Awake()
+        {
+            if (canvasGroup == null || p1Image == null || p2Image == null)
+                throw new System.Exception("CheckpointUI: canvasGroup and both images must be assigned");
+        }
+
         void Start()
         {
-            if (canvasGroup != null)
-                canvasGroup.alpha = 0f;
+            canvasGroup.alpha = 0f;
             targetAlpha = 0f;
             ApplySprites(false, false);
         }
 
         void Update()
         {
-            if (canvasGroup == null) return;
             float current = canvasGroup.alpha;
             float next = Mathf.MoveTowards(current, targetAlpha, Time.unscaledDeltaTime / fadeDuration);
             if (!Mathf.Approximately(current, next))
@@ -41,6 +46,7 @@ namespace CGJ2026
 
         public void ShowProgress(bool p1Committed, bool p2Committed)
         {
+            CancelInvoke(nameof(FadeOutAfterSave));
             targetAlpha = 1f;
             ApplySprites(p1Committed, p2Committed);
         }
@@ -64,10 +70,8 @@ namespace CGJ2026
 
         void ApplySprites(bool p1Committed, bool p2Committed)
         {
-            if (p1Image != null)
-                p1Image.sprite = p1Committed ? p1Ready : p1NotReady;
-            if (p2Image != null)
-                p2Image.sprite = p2Committed ? p2Ready : p2NotReady;
+            p1Image.sprite = p1Committed ? p1Ready : p1NotReady;
+            p2Image.sprite = p2Committed ? p2Ready : p2NotReady;
         }
     }
 }

@@ -3,58 +3,79 @@ using UnityEngine;
 
 namespace CGJ2026
 {
+    /// <summary>One-call game-feel effects: screen shake and small square particles.</summary>
     public static class Juice
     {
-        public static void DeathFlash()
-        {
-            var go = new GameObject("DeathFlash");
-            var canvas = go.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 999;
-            var img = go.AddComponent<UnityEngine.UI.Image>();
-            img.color = new Color(1f, 0f, 0f, 0.6f);
-            var rt = img.rectTransform;
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.sizeDelta = Vector2.zero;
-
-            img.DOFade(0f, 0.4f).SetDelay(0.05f).OnComplete(() => Object.Destroy(go));
-        }
-
-        static void SpawnParticle(Vector2 pos, float size, Color color, Vector2 velocity, float lifetime)
-        {
-            var d = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            d.transform.position = pos;
-            d.transform.localScale = Vector3.one * size;
-            Object.Destroy(d.GetComponent<Collider>());
-            var sr = d.GetComponent<MeshRenderer>();
-            sr.material = new Material(Shader.Find("Sprites/Default"));
-            sr.material.color = color;
-            d.transform.DOMove(d.transform.position + (Vector3)velocity, lifetime).SetEase(Ease.OutQuad);
-            sr.material.DOFade(0f, lifetime).OnComplete(() => Object.Destroy(d));
-        }
-
-        public static void DustPoof(Vector2 worldPos, int count = 5)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                Vector2 vel = Random.insideUnitCircle * 2f + Vector2.up * 1.5f;
-                SpawnParticle(worldPos, 0.08f, new Color(0.6f, 0.55f, 0.5f), vel, 0.4f);
-            }
-        }
-
-        public static void CheckpointBurst(Vector2 worldPos)
-        {
-            for (int i = 0; i < 8; i++)
-            {
-                float angle = (i / 8f) * Mathf.PI * 2f;
-                Vector2 vel = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 2f;
-                SpawnParticle(worldPos, 0.06f, new Color(0.2f, 0.9f, 0.3f), vel, 0.5f);
-            }
-        }
+        static Material particleMaterial;
+        static Sprite particleSprite;
 
         public static void ShakeLight() => CameraSetup.Shake(0.6f, 0.15f);
         public static void ShakeMedium() => CameraSetup.Shake(1.2f, 0.25f);
         public static void ShakeHeavy() => CameraSetup.Shake(3f, 0.5f);
+
+        public static void DustPoof(Vector2 worldPos, int count = 5)
+        {
+            var color = new Color(0.6f, 0.55f, 0.5f);
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 drift = Random.insideUnitCircle * 2f + Vector2.up * 1.5f;
+                SpawnParticle(worldPos, 0.08f, color, drift, 0.4f);
+            }
+        }
+
+        public static void CheckpointBurst(Vector2 worldPos, int count = 8)
+        {
+            var color = new Color(0.2f, 0.9f, 0.3f);
+            for (int i = 0; i < count; i++)
+            {
+                float angle = i / (float)count * Mathf.PI * 2f;
+                Vector2 drift = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 2f;
+                SpawnParticle(worldPos, 0.06f, color, drift, 0.5f);
+            }
+        }
+
+        /// <summary>
+        /// Spawns a square that drifts by <paramref name="drift"/> while fading out, then destroys itself.
+        /// All particles share one sprite and one material, so spawning allocates no GPU resources.
+        /// </summary>
+        public static void SpawnParticle(Vector2 position, float size, Color color, Vector2 drift, float lifetime)
+        {
+            var go = new GameObject("Particle");
+            go.transform.position = position;
+            go.transform.localScale = Vector3.one * size;
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = GetParticleSprite();
+            sr.sharedMaterial = GetParticleMaterial();
+            sr.color = color;
+
+            go.transform.DOMove((Vector3)(position + drift), lifetime).SetEase(Ease.OutQuad).SetLink(go);
+            sr.DOFade(0f, lifetime).SetLink(go).OnComplete(() => Object.Destroy(go));
+        }
+
+        static Sprite GetParticleSprite()
+        {
+            if (particleSprite != null)
+                return particleSprite;
+
+            // 1x1 white texture at 1 pixel per unit: a sprite exactly one world unit wide.
+            var texture = new Texture2D(1, 1) { filterMode = FilterMode.Point };
+            texture.SetPixel(0, 0, Color.white);
+            texture.Apply();
+            particleSprite = Sprite.Create(texture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
+            return particleSprite;
+        }
+
+        static Material GetParticleMaterial()
+        {
+            if (particleMaterial != null)
+                return particleMaterial;
+
+            var shader = Shader.Find("Sprites/Default");
+            if (shader == null)
+                throw new System.Exception("Juice: shader 'Sprites/Default' not found");
+            particleMaterial = new Material(shader);
+            return particleMaterial;
+        }
     }
 }
