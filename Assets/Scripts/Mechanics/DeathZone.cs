@@ -2,20 +2,21 @@ using UnityEngine;
 
 namespace CGJ2026
 {
+    /// <summary>Kills the pair when either player enters (bottom boundary, spikes, water).</summary>
     [RequireComponent(typeof(Collider2D))]
     public class DeathZone : MonoBehaviour
     {
         void Awake()
         {
-            var col = GetComponent<Collider2D>();
-            if (!col.isTrigger)
+            if (!GetComponent<Collider2D>().isTrigger)
                 throw new System.Exception("DeathZone collider must be set to IsTrigger");
         }
 
         void OnTriggerEnter2D(Collider2D other)
         {
-            if (other.GetComponent<PlayerController>() == null) return;
-            EventBus.Emit(E.PlayerFell);
+            var pc = other.GetComponent<PlayerController>();
+            if (pc != null)
+                EventBus.Emit(E.PlayerFell, pc);
         }
     }
 }

@@ -3,26 +3,34 @@ using UnityEngine;
 
 namespace CGJ2026
 {
+    /// <summary>
+    /// Activates when both players are anchored inside its trigger: sets the respawn point,
+    /// shows the saved UI and optionally raises the water to <see cref="waterTargetY"/>.
+    /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class Checkpoint : MonoBehaviour
     {
+        const int RequiredPlayers = 2;
+
         [SerializeField] Sprite inactiveSprite;
         [SerializeField] Sprite activatedSprite;
         [SerializeField] float respawnHeightOffset = 2f;
+        [Tooltip("Optional. Leave empty for checkpoints that do not move the water.")]
         [SerializeField] RisingWater risingWater;
         [SerializeField] float waterTargetY;
         [SerializeField] CheckpointUI ui;
 
         SpriteRenderer spriteRenderer;
         bool activated;
-        HashSet<PlayerController> playersInside = new HashSet<PlayerController>();
-        HashSet<PlayerController> committedPlayers = new HashSet<PlayerController>();
+        readonly HashSet<PlayerController> playersInside = new();
+        readonly HashSet<PlayerController> anchoredInside = new();
 
         void Awake()
         {
-            var col = GetComponent<Collider2D>();
-            if (!col.isTrigger)
+            if (!GetComponent<Collider2D>().isTrigger)
                 throw new System.Exception("Checkpoint collider must be set to IsTrigger");
+            if (ui == null)
+                throw new System.Exception($"Checkpoint [{name}]: ui not assigned");
 
             spriteRenderer = GetComponent<SpriteRenderer>();
             if (spriteRenderer != null)
@@ -44,86 +52,81 @@ namespace CGJ2026
         void OnTriggerEnter2D(Collider2D other)
         {
             var pc = other.GetComponent<PlayerController>();
-            if (pc != null)
-            {
-                playersInside.Add(pc);
-                RefreshUI();
-            }
+            if (pc == null || activated)
+                return;
+
+            playersInside.Add(pc);
+            // A player can snap into the zone already anchored; count them right away.
+            if (pc.IsAnchored)
+                anchoredInside.Add(pc);
+            Refresh();
         }
 
         void OnTriggerExit2D(Collider2D other)
         {
             var pc = other.GetComponent<PlayerController>();
-            if (pc != null)
-            {
-                playersInside.Remove(pc);
-                committedPlayers.Remove(pc);
-                RefreshUI();
-            }
+            if (pc == null || activated)
+                return;
+
+            playersInside.Remove(pc);
+            anchoredInside.Remove(pc);
+            Refresh();
         }
 
         void OnPlayerAnchored(object data)
         {
-            if (activated) return;
-            var pc = data as PlayerController;
-            if (pc == null || !playersInside.Contains(pc)) return;
+            var pc = (PlayerController)data;
+            if (activated || !playersInside.Contains(pc))
+                return;
 
-            committedPlayers.Add(pc);
-            RefreshUI();
-
-            if (committedPlayers.Count >= 2)
-                Activate();
+            anchoredInside.Add(pc);
+            Refresh();
         }
 
         void OnPlayerReleased(object data)
         {
-            if (activated) return;
-            var pc = data as PlayerController;
-            if (pc == null) return;
-
-            if (committedPlayers.Remove(pc))
-                RefreshUI();
+            if (!activated && anchoredInside.Remove((PlayerController)data))
+                Refresh();
         }
 
-        void Activate()
+        void Refresh()
         {
-            activated = true;
-            Vector3 pos = transform.position + Vector3.up * respawnHeightOffset;
-            LevelManager.Instance?.SetCheckpoint(pos);
+            if (anchoredInside.Count >= RequiredPlayers)
+            {
+                Activate();
+                return;
+            }
 
-            if (spriteRenderer != null)
-                spriteRenderer.sprite = activatedSprite;
-
-            Juice.CheckpointBurst(transform.position);
-            EventBus.Emit(E.CheckpointReached, 0);
-
-            if (ui != null)
-                ui.ShowSaved();
-
-            if (risingWater != null)
-                risingWater.RiseTo(waterTargetY);
-        }
-
-        void RefreshUI()
-        {
-            if (ui == null || activated) return;
-
-            bool anyInside = playersInside.Count > 0;
-            if (!anyInside)
+            if (playersInside.Count == 0)
             {
                 ui.Hide();
                 return;
             }
 
-            bool p1Committed = false;
-            bool p2Committed = false;
-            foreach (var pc in committedPlayers)
+            bool p1Anchored = false;
+            bool p2Anchored = false;
+            foreach (var pc in anchoredInside)
             {
-                if (pc.PlayerIndex == 0) p1Committed = true;
-                if (pc.PlayerIndex == 1) p2Committed = true;
+                if (pc.PlayerIndex == 0) p1Anchored = true;
+                if (pc.PlayerIndex == 1) p2Anchored = true;
             }
+            ui.ShowProgress(p1Anchored, p2Anchored);
+        }
 
-            ui.ShowProgress(p1Committed, p2Committed);
+        void Activate()
+        {
+            activated = true;
+            LevelManager.Instance.SetCheckpoint(transform.position + Vector3.up * respawnHeightOffset);
+
+            if (spriteRenderer != null)
+                spriteRenderer.sprite = activatedSprite;
+
+            Juice.CheckpointBurst(transform.position);
+            EventBus.Emit(E.CheckpointReached, this);
+            ui.ShowSaved();
+
+            if (risingWater != null)
+                risingWater.RiseTo(waterTargetY);
         }
     }
 }

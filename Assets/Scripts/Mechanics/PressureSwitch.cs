@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace CGJ2026
 {
+    /// <summary>Holds a gate and/or elevator open while at least one player stands on it.</summary>
     [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
     public class PressureSwitch : MonoBehaviour
     {
@@ -11,13 +12,16 @@ namespace CGJ2026
         [SerializeField] Sprite onSprite;
 
         SpriteRenderer sr;
-        int bodiesOnSwitch;
+        int playersOnSwitch;
 
         void Awake()
         {
-            var col = GetComponent<Collider2D>();
-            if (!col.isTrigger)
+            if (!GetComponent<Collider2D>().isTrigger)
                 throw new System.Exception("PressureSwitch collider must be set to IsTrigger");
+            if (targetGate == null && targetElevator == null)
+                throw new System.Exception($"PressureSwitch [{name}]: assign a target gate or elevator");
+            if (offSprite == null || onSprite == null)
+                throw new System.Exception($"PressureSwitch [{name}]: assign both sprites");
 
             sr = GetComponent<SpriteRenderer>();
             sr.drawMode = SpriteDrawMode.Simple;
@@ -26,31 +30,45 @@ namespace CGJ2026
 
         void OnTriggerEnter2D(Collider2D other)
         {
-            if (other.GetComponent<PlayerController>() == null) return;
-            bodiesOnSwitch++;
-            if (bodiesOnSwitch == 1)
-                SwapSprite(onSprite);
-            targetGate?.Open();
-            targetElevator?.Open();
+            if (other.GetComponent<PlayerController>() == null)
+                return;
+
+            playersOnSwitch++;
+            if (playersOnSwitch == 1)
+                SetPressed(true);
         }
 
         void OnTriggerExit2D(Collider2D other)
         {
-            if (other.GetComponent<PlayerController>() == null) return;
-            bodiesOnSwitch = Mathf.Max(0, bodiesOnSwitch - 1);
-            if (bodiesOnSwitch == 0)
+            if (other.GetComponent<PlayerController>() == null)
+                return;
+
+            playersOnSwitch = Mathf.Max(0, playersOnSwitch - 1);
+            if (playersOnSwitch == 0)
+                SetPressed(false);
+        }
+
+        void SetPressed(bool pressed)
+        {
+            SwapSprite(pressed ? onSprite : offSprite);
+
+            if (targetGate != null)
             {
-                SwapSprite(offSprite);
-                targetGate?.Close();
-                targetElevator?.Close();
+                if (pressed) targetGate.Open();
+                else targetGate.Close();
+            }
+
+            if (targetElevator != null)
+            {
+                if (pressed) targetElevator.Open();
+                else targetElevator.Close();
             }
         }
 
+        /// <summary>Swaps the sprite while keeping its bottom edge in place, since the two sprites differ in height.</summary>
         void SwapSprite(Sprite target)
         {
-            if (sr.sprite == target) return;
-
-            float oldHeight = sr.sprite != null ? sr.sprite.bounds.size.y * transform.localScale.y : 0f;
+            float oldHeight = sr.sprite.bounds.size.y * transform.localScale.y;
             sr.sprite = target;
             float newHeight = target.bounds.size.y * transform.localScale.y;
 

@@ -2,11 +2,22 @@ using UnityEngine;
 
 namespace CGJ2026
 {
+    /// <summary>
+    /// Patrols a platform, turning at ledges and walls. On contact with a player:
+    /// landing on its head kills it, a fast swing slams it away, anything else kills the players.
+    /// </summary>
     [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
     public class Enemy : MonoBehaviour
     {
+        const float Mass = 2f;
+        const float ProbeSkin = 0.05f;
+        const float GroundProbeExtra = 0.1f;
+        const float WallProbeReach = 0.3f;
+
         [Header("Combat")]
+        [Tooltip("Vertical impact speed needed for a stomp. Only the magnitude is used, so existing negative values still work.")]
         [SerializeField] float stompThreshold = -2f;
+        [Tooltip("Minimum impact speed that slams the enemy away instead of hurting the player.")]
         [SerializeField] float slamSpeedThreshold = 8f;
         [SerializeField] float slamForce = 15f;
         [SerializeField] float stompBounceForce = 8f;
@@ -14,43 +25,31 @@ namespace CGJ2026
         [Header("Patrol")]
         [SerializeField] float patrolSpeed = 1.5f;
         [SerializeField] LayerMask groundLayer;
+        [Tooltip("Layers that turn the enemy around; should include ground and other enemies.")]
         [SerializeField] LayerMask wallLayer;
 
         Rigidbody2D rb;
-        Collider2D col;
-        int facing = 1; // 1 = right, -1 = left
+        Collider2D body;
+        int facing = 1;
 
         void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
-            col = GetComponent<Collider2D>();
+            body = GetComponent<Collider2D>();
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
             rb.bodyType = RigidbodyType2D.Dynamic;
-            rb.mass = 2f;
+            rb.mass = Mass;
         }
 
         void FixedUpdate()
         {
-            Patrol();
-        }
-
-        void Patrol()
-        {
-            Bounds b = col.bounds;
-            float halfW = b.extents.x;
-            float halfH = b.extents.y;
-            float skin = 0.05f; // small offset to avoid hitting own collider
-
-            // Ground check: only checks ground layer
-            Vector2 frontOrigin = new Vector2(b.center.x + (halfW + skin) * facing, b.center.y);
-            bool groundAhead = Physics2D.Raycast(frontOrigin, Vector2.down, halfH + 0.1f, groundLayer);
-
-            // Wall check: checks wall layer (should include ground + enemy layers)
-            Vector2 wallOrigin = new Vector2(b.center.x + (halfW + skin) * facing, b.center.y);
-            bool wallAhead = Physics2D.Raycast(wallOrigin, Vector2.right * facing, 0.3f, wallLayer);
+            Bounds b = body.bounds;
+            var front = new Vector2(b.center.x + (b.extents.x + ProbeSkin) * facing, b.center.y);
+            bool groundAhead = Physics2D.Raycast(front, Vector2.down, b.extents.y + GroundProbeExtra, groundLayer);
+            bool wallAhead = Physics2D.Raycast(front, Vector2.right * facing, WallProbeReach, wallLayer);
 
             if (!groundAhead || wallAhead)
-                facing *= -1;
+                facing = -facing;
 
             rb.velocity = new Vector2(facing * patrolSpeed, rb.velocity.y);
         }
@@ -58,48 +57,41 @@ namespace CGJ2026
         void OnCollisionEnter2D(Collision2D collision)
         {
             var pc = collision.gameObject.GetComponent<PlayerController>();
-            if (pc == null) return;
-
-            var playerRb = collision.rigidbody;
-            if (playerRb == null) return;
-
-            float playerSpeed = playerRb.velocity.magnitude;
-
-            if (playerRb.velocity.y < stompThreshold)
-            {
-                Stomped(pc, playerRb);
+            if (pc == null)
                 return;
-            }
 
-            if (playerSpeed >= slamSpeedThreshold)
-            {
-                BodySlammed(collision);
-                return;
-            }
+            // Body velocities are already resolved by the time this callback runs (a stomp
+            // reads as ~0), so judge the hit by the pre-impact relative velocity instead.
+            Vector2 impact = collision.relativeVelocity;
+            bool playerAbove = collision.collider.bounds.min.y >= body.bounds.center.y;
 
-            EventBus.Emit(E.PlayerFell);
+            if (playerAbove && Mathf.Abs(impact.y) >= Mathf.Abs(stompThreshold))
+                Stomped(pc);
+            else if (impact.magnitude >= slamSpeedThreshold)
+                Slammed(collision.transform.position);
+            else
+                EventBus.Emit(E.PlayerFell, pc);
         }
 
-        void Stomped(PlayerController pc, Rigidbody2D playerRb)
+        void Stomped(PlayerController pc)
         {
-            AudioManager.Instance?.PlayStomp();
+            AudioManager.Instance.PlayStomp();
 
-            if (pc.Form == CharacterForm.Anchor)
+            // A human bounces off; an anchor-form player smashes through and keeps falling.
+            if (pc.Form == CharacterForm.Human)
             {
-                // Anchor form smashes through — no bounce, keep downward momentum
-                Destroy(gameObject);
-                return;
+                Rigidbody2D playerBody = pc.Body;
+                playerBody.velocity = new Vector2(playerBody.velocity.x, 0f);
+                playerBody.AddForce(Vector2.up * stompBounceForce, ForceMode2D.Impulse);
             }
 
-            playerRb.velocity = new Vector2(playerRb.velocity.x, 0f);
-            playerRb.AddForce(Vector2.up * stompBounceForce, ForceMode2D.Impulse);
             Destroy(gameObject);
         }
 
-        void BodySlammed(Collision2D collision)
+        void Slammed(Vector2 hitterPosition)
         {
-            Vector2 dir = ((Vector2)transform.position - (Vector2)collision.transform.position).normalized;
-            rb.AddForce(dir * slamForce, ForceMode2D.Impulse);
+            Vector2 away = ((Vector2)transform.position - hitterPosition).normalized;
+            rb.AddForce(away * slamForce, ForceMode2D.Impulse);
         }
     }
 }

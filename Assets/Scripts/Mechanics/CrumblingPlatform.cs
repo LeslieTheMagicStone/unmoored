@@ -1,97 +1,88 @@
-using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
 namespace CGJ2026
 {
+    /// <summary>
+    /// Shakes for <see cref="holdDuration"/> seconds after a player stands on or anchors to it, then breaks.
+    /// A player anchored to it loses the pivot when the collider turns off (PlayerController notices).
+    /// Comes back after <see cref="respawnDelay"/> unless one-shot, and always on player respawn.
+    /// </summary>
+    [RequireComponent(typeof(Collider2D))]
     public class CrumblingPlatform : MonoBehaviour
     {
-        [SerializeField] float holdDuration = 2f;
+        [SerializeField] float holdDuration = 3f;
         [SerializeField] float respawnDelay = 3f;
         [SerializeField] bool oneShot;
         [SerializeField] Transform visualTransform;
 
         Collider2D platformCollider;
         SpriteRenderer spriteRenderer;
-        Vector3 originalPos;
+        Transform shakeTarget;
+        Vector3 originalLocalPos;
         Color originalColor;
-        Tween shakeTween;
+        Tween respawnCall;
         float timer;
-        bool broken;
         bool triggered;
-        readonly List<PlayerController> anchoredPlayers = new List<PlayerController>();
+        bool broken;
 
         void Awake()
         {
             platformCollider = GetComponent<Collider2D>();
-            spriteRenderer = visualTransform != null ? visualTransform.GetComponent<SpriteRenderer>() : GetComponent<SpriteRenderer>();
-            originalPos = visualTransform != null ? visualTransform.localPosition : transform.localPosition;
-            if (spriteRenderer != null)
-                originalColor = spriteRenderer.color;
+            shakeTarget = visualTransform != null ? visualTransform : transform;
+            spriteRenderer = shakeTarget.GetComponent<SpriteRenderer>();
+            if (spriteRenderer == null)
+                throw new System.Exception($"CrumblingPlatform [{name}]: needs a SpriteRenderer on {shakeTarget.name}");
+
+            originalLocalPos = shakeTarget.localPosition;
+            originalColor = spriteRenderer.color;
         }
 
         void OnEnable()
         {
             EventBus.On(E.PlayerAnchored, OnPlayerAnchored);
-            EventBus.On(E.PlayerReleased, OnPlayerReleased);
             EventBus.On(E.PlayerRespawned, OnPlayerRespawned);
         }
 
         void OnDisable()
         {
             EventBus.Off(E.PlayerAnchored, OnPlayerAnchored);
-            EventBus.Off(E.PlayerReleased, OnPlayerReleased);
             EventBus.Off(E.PlayerRespawned, OnPlayerRespawned);
+        }
+
+        void OnDestroy()
+        {
+            respawnCall?.Kill();
+            shakeTarget.DOKill();
+            spriteRenderer.DOKill();
         }
 
         void OnCollisionStay2D(Collision2D collision)
         {
-            if (broken || triggered) return;
-            var pc = collision.gameObject.GetComponent<PlayerController>();
-            if (pc == null) return;
-
-            if (pc.transform.position.y < platformCollider.bounds.max.y)
+            if (triggered)
                 return;
 
-            Activate();
+            var pc = collision.gameObject.GetComponent<PlayerController>();
+            // Only standing on top counts; brushing the side does not start the timer.
+            if (pc != null && pc.transform.position.y >= platformCollider.bounds.max.y)
+                Trigger();
         }
 
         void OnPlayerAnchored(object data)
         {
-            var pc = data as PlayerController;
-            if (pc == null) return;
-            if (broken) return;
-
-            if (pc.AnchoredCollider != platformCollider) return;
-
-            anchoredPlayers.Add(pc);
-            if (!triggered)
-                Activate();
-        }
-
-        void OnPlayerReleased(object data)
-        {
-            var pc = data as PlayerController;
-            if (pc == null) return;
-            anchoredPlayers.Remove(pc);
+            if (!triggered && ((PlayerController)data).AnchoredCollider == platformCollider)
+                Trigger();
         }
 
         void OnPlayerRespawned(object _)
         {
-            if (broken || triggered)
-                Respawn();
-        }
-
-        void Activate()
-        {
-            triggered = true;
-            Transform t = visualTransform != null ? visualTransform : transform;
-            shakeTween = t.DOShakePosition(holdDuration, 0.08f, 20, 90, false, true);
+            if (triggered)
+                Restore();
         }
 
         void FixedUpdate()
         {
-            if (broken || !triggered)
+            if (!triggered || broken)
                 return;
 
             timer += Time.fixedDeltaTime;
@@ -99,50 +90,44 @@ namespace CGJ2026
                 Break();
         }
 
+        void Trigger()
+        {
+            triggered = true;
+            timer = 0f;
+            shakeTarget.DOShakePosition(holdDuration, 0.08f, 20, 90, false, true);
+        }
+
         void Break()
         {
             broken = true;
-            shakeTween?.Kill();
-            shakeTween = null;
             platformCollider.enabled = false;
-            AudioManager.Instance?.PlayCrumble();
+            AudioManager.Instance.PlayCrumble();
             Juice.ShakeMedium();
 
-            var toRelease = new List<PlayerController>(anchoredPlayers);
-            anchoredPlayers.Clear();
-            foreach (var pc in toRelease)
-                pc.ReleaseFromSurface();
-
-            Transform t = visualTransform != null ? visualTransform : transform;
-            t.DOShakePosition(0.2f, 0.12f, 30, 90);
+            shakeTarget.DOKill();
+            shakeTarget.DOShakePosition(0.2f, 0.12f, 30, 90);
             spriteRenderer.DOFade(0f, 0.25f).SetDelay(0.1f).OnComplete(() =>
             {
                 spriteRenderer.enabled = false;
-                timer = 0f;
-
                 if (!oneShot)
-                    DOVirtual.DelayedCall(respawnDelay, Respawn);
+                    respawnCall = DOVirtual.DelayedCall(respawnDelay, Restore);
             });
         }
 
-        void Respawn()
+        void Restore()
         {
-            shakeTween?.Kill();
-            shakeTween = null;
-            Transform t = visualTransform != null ? visualTransform : transform;
-            t.DOKill();
-            if (spriteRenderer != null)
-            {
-                spriteRenderer.DOKill();
-                spriteRenderer.enabled = true;
-                spriteRenderer.color = originalColor;
-            }
-            broken = false;
-            triggered = false;
-            timer = 0f;
+            respawnCall?.Kill();
+            respawnCall = null;
+            shakeTarget.DOKill();
+            spriteRenderer.DOKill();
+
+            shakeTarget.localPosition = originalLocalPos;
+            spriteRenderer.enabled = true;
+            spriteRenderer.color = originalColor;
             platformCollider.enabled = true;
-            anchoredPlayers.Clear();
-            t.localPosition = originalPos;
+            triggered = false;
+            broken = false;
+            timer = 0f;
         }
     }
 }
