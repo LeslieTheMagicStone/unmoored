@@ -1,5 +1,10 @@
 namespace CGJ2026
 {
+    /// <summary>
+    /// Event ids for <see cref="EventBus"/>. Payloads: PlayerAnchored, PlayerReleased and
+    /// PlayerFell carry the <see cref="PlayerController"/>; LivesChanged carries the remaining lives (int);
+    /// CheckpointReached carries the <see cref="Checkpoint"/>; the rest carry null.
+    /// </summary>
     public static class E
     {
         public const string ScoreChanged      = "score_changed";
