@@ -6,7 +6,7 @@
 - macOS 25.3.0（darwin）
 - DOTween (免费版, Plugins/Demigiant/DOTween)
 - TextMeshPro (3.0.6 内置)
-- Cinemachine (2.9.7, Package Manager)
+- Camera: manual smooth follow + DOTween shake (no Cinemachine), see `Scripts/CameraSetup.cs`
 - Input System (1.7.0, Package Manager)
 
 ## 项目结构
@@ -20,9 +20,10 @@ Assets/
 ├── Audio/           # 音效（后续手动创建）
 ├── Resources/       # 动态加载资源
 ├── Settings/        # URP Pipeline Asset / Volume Profile
-├── Plugins/         # DOTween, FMOD
-├── TextMesh Pro/    # TMP 资产
-└── TutorialInfo/    # 模板自带，可删
+├── Plugins/         # DOTween
+├── ModernWater2D/   # 第三方 2D 水面渲染
+├── Design/          # 策划文档/草图
+└── TextMesh Pro/    # TMP 资产
 ```
 
 ## 代码约定
@@ -42,12 +43,15 @@ Assets/
 
 ### EventBus —— 全局事件系统
 
-`Scripts/EventBus.cs`：静态类，Dictionary 存 `Action<object>`。`On(id, handler)` 注册、`Off(id)` 移除、`Emit(id, data)` 发送。一个 key 只存一个 handler（jam 够用，需要多个时改用 `event`）。
+`Scripts/EventBus.cs`：静态类，Dictionary 存多播 `Action<object>`。`On(id, handler)` 注册、`Off(id, handler)` 移除该 handler、`Emit(id, data)` 发送。同一个 key 可以挂多个 handler（例如 `PlayerAnchored` 同时被 AudioManager、Checkpoint、MovingPlatform 等订阅）。
 
 `Scripts/E.cs`：事件 ID 常量类，所有跨系统事件名集中在这里：
 
 ```
-ScoreChanged  LevelComplete
+ScoreChanged       LevelComplete      GameClear
+PlayerAnchored     PlayerReleased     PlayerFell
+LivesChanged       GameOver
+CheckpointReached  PlayerRespawned
 ```
 
 ### 模块化原则
@@ -63,7 +67,7 @@ ScoreChanged  LevelComplete
 
 2D 垂直爬塔游戏，双人合作（本地同屏），两人用一根绳子相连。
 
-方向：玩家向上爬，地图整体向下滚动（类似 Getting Over It 的方向感）。
+方向：玩家向上爬（类似 Getting Over It 的方向感）。地图本身不滚动，摄像机跟随两人；下方的水位随存档点推进逐段上涨。
 
 **核心循环**
 
@@ -77,7 +81,7 @@ A 变锚 → B 借力摆荡上去 → B 变锚 → A 释放锚、荡上去 → �
 - **锚定判定**：锚化键随时可以按，但按键本身不是成功锚定。角色会检测自己是否接触平台边缘或可挂锚点；检测成功才挂住地形并进入锚形态。附近没有可挂点时保持人形态，继续正常受重力下落或移动，不能凭空变成摆荡支点。
 - **锚形态**：成功挂住地形后完全不能移动、不能跳跃，程序上变为 Kinematic Rigidbody。锚可承受队友产生的拉力，成为队友摆荡的支点，也可让队友借摆荡撞击敌人。
 - **解除锚定**：只有锚定者本人能解除锚定，摆荡者不能替队友解除。主动解除、挂点失效、误判落空、两人同时掉出平台或被敌人击落，都会导致两人失去支点并可能掉落。
-- **地图滚动**：只要有玩家成功锚定到平台/地形，地图在画面上停止向下移动；至少一人解除且没有其他地形锚定后，地图继续滚动。代码侧由 `MapScrollController` 订阅 `PlayerAnchored` / `PlayerReleased` 控制 world root。
+- **水位与镜头**（已取代早期设计里的地图滚动 / `MapScrollController`，该脚本从未实现）：地图不滚动。`CameraSetup` 平滑跟随两名玩家，`CameraFocusZone` 可临时覆盖镜头焦点和缩放。`RisingWater` 在存档点被激活时（两名玩家都在 `Checkpoint` 范围内锚定）用 DOTween 把水面升到该存档点配置的 `waterTargetY`。
 - **人形态**：正常移动、跳跃。未锚定时仍受绳子约束；如果不变成锚就尝试荡，会带动另一名玩家，可能把对方一起拉下平台。
 - **绳子**：固定最大长度，不可主动伸缩。当双方距离达到绳长时绳子拉紧，无法继续远离。摆荡时绳长保持固定最大长度。
 - **两人同时锚定**：允许。两人分别固定在不同平台，绳子拉紧，无法继续移动。必须至少一人解除才能继续；不会死锁，也可以作为机关解法。
@@ -85,7 +89,7 @@ A 变锚 → B 借力摆荡上去 → B 变锚 → A 释放锚、荡上去 → �
 
 **死亡与重生**
 
-- 掉落到底部边界 / 碰到敌人 / 被地图带到最底部 → 死亡
+- 掉进 `DeathZone`（底部边界等）/ 碰到敌人 → 死亡（`PlayerFell`）
 - 死亡后扣除生命值，从掉落位置上空重新生成往下落
 
 **战斗（简版）**
@@ -185,7 +189,7 @@ A 变锚 → B 借力摆荡上去 → B 变锚 → A 释放锚、荡上去 → �
 
 ## 场景流
 
-MainMenu → Game → GameOver（三场景闭环）
+Intro → MainMenu → Game → GameOver（Build Settings 顺序；Game ↔ GameOver 闭环）
 
 ## 开发约束
 
