@@ -6,7 +6,7 @@
 - macOS 25.3.0（darwin）
 - DOTween (免费版, Plugins/Demigiant/DOTween)
 - TextMeshPro (3.0.6 内置)
-- Camera: manual smooth follow + DOTween shake (no Cinemachine), see `Scripts/CameraSetup.cs`
+- Camera: manual smooth follow + DOTween shake (no Cinemachine), see `Scripts/Camera/CameraSetup.cs`
 - Input System (1.7.0, Package Manager)
 
 ## 项目结构
@@ -14,9 +14,19 @@
 ```
 Assets/
 ├── Scenes/          # 场景文件
-├── Scripts/         # 所有 C# 脚本
+├── Scripts/         # 所有 C# 脚本，按系统分目录：
+│   ├── Core/        #   EventBus、E、GameManager、LevelManager、LocalizationManager
+│   ├── Player/      #   PlayerController、PlayerAnimator、RopeSystem、GroundProbe、AnchorSurfaceProbe
+│   ├── Camera/      #   CameraSetup、CameraFocusZone
+│   ├── Mechanics/   #   存档点、各类平台与机关、敌人、水位
+│   ├── Audio/       #   AudioManager
+│   ├── FX/          #   Juice（震屏/粒子）、环境粒子、视差背景
+│   ├── LevelDesign/ #   TerrainSizer、SpriteColliderSync、TileFiller、RopeLengthGuide
+│   ├── UI/          #   各场景 UI
+│   ├── Config/      #   ScriptableObject 配置
+│   └── Editor/      #   编辑器菜单工具
 ├── Prefabs/         # 预制体（后续手动创建）
-├── Art/             # 美术资产（后续手动创建）
+├── Art/             # 美术资产：Characters/、Environment/、Backgrounds/、UI/、Video/、Fonts/（见 Art/README.txt）
 ├── Audio/           # 音效（后续手动创建）
 ├── Resources/       # 动态加载资源
 ├── Settings/        # URP Pipeline Asset / Volume Profile
@@ -43,9 +53,9 @@ Assets/
 
 ### EventBus —— 全局事件系统
 
-`Scripts/EventBus.cs`：静态类，Dictionary 存多播 `Action<object>`。`On(id, handler)` 注册、`Off(id, handler)` 移除该 handler、`Emit(id, data)` 发送。同一个 key 可以挂多个 handler（例如 `PlayerAnchored` 同时被 AudioManager、Checkpoint、MovingPlatform 等订阅）。
+`Scripts/Core/EventBus.cs`：静态类，Dictionary 存多播 `Action<object>`。`On(id, handler)` 注册、`Off(id, handler)` 移除该 handler、`Emit(id, data)` 发送。同一个 key 可以挂多个 handler（例如 `PlayerAnchored` 同时被 AudioManager、Checkpoint、MovingPlatform 等订阅）。
 
-`Scripts/E.cs`：事件 ID 常量类，所有跨系统事件名集中在这里：
+`Scripts/Core/E.cs`：事件 ID 常量类，所有跨系统事件名集中在这里：
 
 ```
 ScoreChanged       LevelComplete      GameClear
@@ -53,6 +63,8 @@ PlayerAnchored     PlayerReleased     PlayerFell
 LivesChanged       GameOver
 CheckpointReached  PlayerRespawned
 ```
+
+`PlayerAnchored` 只在玩家真正挂住地形时发出（贴边吸附成功，或锚形态下落着地），payload 是该 `PlayerController`；空中按锚键只切形态、不发事件。`PlayerReleased` 在离开挂住状态时发出。
 
 ### 模块化原则
 

@@ -1,27 +1,22 @@
 ART ASSETS
 ==========
 
-Place all visual/audio assets in the matching subfolder.
-Unity .meta files are generated automatically — don't delete them.
-Use .png for sprites, .psd sources stay outside the project.
+Unity .meta files carry each asset's GUID. Always move an asset together
+with its .meta file (or move it inside the Unity Editor), otherwise scene
+and prefab references break.
 
 FOLDERS
 -------
-Sprites/     — character sprites, props, UI icons (PNG, Pixels Per Unit = 100)
-Animations/  — .anim / .controller files
-Tilemaps/    — tile palettes, tile assets for level geometry
-Fonts/       — custom fonts (TTF/OTF)
-Materials/   — custom materials for sprites, effects
+Characters/Player1/  - player 1 sprites (walk, jump, stop, anchor)
+Characters/Player2/  - player 2 sprites (same set, "2" prefix)
+Environment/Platforms/ - platform and block sprites
+Environment/Props/   - doors, elevator, pipes, switches, trampoline, checkpoint
+Backgrounds/         - background layers
+UI/                  - UI images; UI/Keyboard/ holds key prompt sprites
+Video/               - intro video
+Fonts/               - TTF sources and TMP SDF font assets
 
 RULES
 -----
-- No spaces in filenames — use PascalCase or snake_case
-- Player sprites: prefix with Player_  (e.g. Player_Idle.png)
-- Enemy sprites:  prefix with Enemy_   (e.g. Enemy_Slime.png)
-- Environment:    prefix with Env_     (e.g. Env_PlatformStone.png)
-- UI elements:    prefix with UI_      (e.g. UI_ButtonNormal.png)
-
-For the programmer:
-- Placeholder sprites are currently the default Unity white square.
-- Replace by dragging your sprites into corresponding slots on prefabs/scene objects.
-- All SpriteRenderers use DrawMode=Tiled so tileable textures auto-repeat.
+- Sprites are PNG, Pixels Per Unit = 100. Keep .psd sources outside the project.
+- New files: no spaces in filenames, use snake_case or PascalCase.
